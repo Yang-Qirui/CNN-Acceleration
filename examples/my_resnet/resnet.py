@@ -109,4 +109,5 @@ def create_resnet(batch_size, target, image_size=[32, 32], resnet_scale=18, in_c
     return hcl.build(s, target=target)
 
 
-create_resnet(32, 'vhls_csim')
+f = create_resnet(32, 'vhls')
+print(f)

@@ -108,15 +108,15 @@ def conv2d(Input, Filter, name="conv2d", stride=[1, 1], padding=[[1, 1], [1, 1]]
 
 def relu(data, name='relu'):
     # CPU Backend
-    # x1 = hcl.compute(data.shape, lambda *y: hcl.select(data[y] < 0, hcl.cast(data.dtype, 0), data[y]), name=name+'_x1')
-    # x2 = hcl.compute(x1.shape, lambda *y: hcl.select(x1[y] > 1, hcl.cast(data.dtype, 1), x1[y]), name=name)
-    # return x2
+    x1 = hcl.compute(data.shape, lambda *y: hcl.select(data[y] < 0, hcl.cast(data.dtype, 0), data[y]), name=name+'_x1')
+    x2 = hcl.compute(x1.shape, lambda *y: hcl.select(x1[y] > 1, hcl.cast(data.dtype, 1), x1[y]), name=name)
+    return x2
     # HLS Backend
-    return hcl.compute(data.shape, lambda *y:
-                       hcl.select(data[y] < 0,
-                                  hcl.cast(data.dtype, 0),
-                                  hcl.select(data[y] > 1, hcl.cast(data.dtype, 1), data[y])),
-                       name=name)
+    # return hcl.compute(data.shape, lambda *y:
+    #                   hcl.select(data[y] < 0,
+    #                              hcl.cast(data.dtype, 0),
+    #                              hcl.select(data[y] > 1, hcl.cast(data.dtype, 1), data[y])),
+    #                   name=name)
 
 
 def linear(input, weight, name='linear'):
