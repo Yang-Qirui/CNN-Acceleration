@@ -1,0 +1,3 @@
+[submodule "examples/my_ultranet"]
+	path = examples/my_ultranet
+	url = https://github.com/sjz38/my_ultranet.git
