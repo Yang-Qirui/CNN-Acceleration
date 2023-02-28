@@ -320,52 +320,53 @@ def run(batch_size):
     correct_5 = 0.0
 
     for n_iter, (image, label) in enumerate(cifar100_test_loader):
-        hcl_input = hcl.asarray(image.numpy().astype(float))
-        print(f'Iter {n_iter} run started')
-        f(
-            hcl_input,
-            hcl_conv1_x_weight, hcl_bn1_x_weight, hcl_bn1_x_bias,
-            hcl_conv2_0_conv1, hcl_conv2_0_bn_w1, hcl_conv2_0_bn_b1, hcl_conv2_0_conv2, hcl_conv2_0_bn_w2, hcl_conv2_0_bn_b2,
-            hcl_conv2_1_conv1, hcl_conv2_1_bn_w1, hcl_conv2_1_bn_b1, hcl_conv2_1_conv2, hcl_conv2_1_bn_w2, hcl_conv2_1_bn_b2,
-            hcl_conv3_0_conv1, hcl_conv3_0_bn_w1, hcl_conv3_0_bn_b1, hcl_conv3_0_conv2, hcl_conv3_0_bn_w2, hcl_conv3_0_bn_b2, hcl_conv3_0_convs, hcl_conv3_0_bn_ws, hcl_conv3_0_bn_bs,
-            hcl_conv3_1_conv1, hcl_conv3_1_bn_w1, hcl_conv3_1_bn_b1, hcl_conv3_1_conv2, hcl_conv3_1_bn_w2, hcl_conv3_1_bn_b2,
-            hcl_conv4_0_conv1, hcl_conv4_0_bn_w1, hcl_conv4_0_bn_b1, hcl_conv4_0_conv2, hcl_conv4_0_bn_w2, hcl_conv4_0_bn_b2, hcl_conv4_0_convs, hcl_conv4_0_bn_ws, hcl_conv4_0_bn_bs,
-            hcl_conv4_1_conv1, hcl_conv4_1_bn_w1, hcl_conv4_1_bn_b1, hcl_conv4_1_conv2, hcl_conv4_1_bn_w2, hcl_conv4_1_bn_b2,
-            hcl_conv5_0_conv1, hcl_conv5_0_bn_w1, hcl_conv5_0_bn_b1, hcl_conv5_0_conv2, hcl_conv5_0_bn_w2, hcl_conv5_0_bn_b2, hcl_conv5_0_convs, hcl_conv5_0_bn_ws, hcl_conv5_0_bn_bs,
-            hcl_conv5_1_conv1, hcl_conv5_1_bn_w1, hcl_conv5_1_bn_b1, hcl_conv5_1_conv2, hcl_conv5_1_bn_w2, hcl_conv5_1_bn_b2,
-            hcl_fc_weight, hcl_fc_bias,
-            hcl_out
-        )
+        if label.shape[0] == batch_size:
+            hcl_input = hcl.asarray(image.numpy().astype(float))
+            print(f'Iter {n_iter} run started')
+            f(
+                hcl_input,
+                hcl_conv1_x_weight, hcl_bn1_x_weight, hcl_bn1_x_bias,
+                hcl_conv2_0_conv1, hcl_conv2_0_bn_w1, hcl_conv2_0_bn_b1, hcl_conv2_0_conv2, hcl_conv2_0_bn_w2, hcl_conv2_0_bn_b2,
+                hcl_conv2_1_conv1, hcl_conv2_1_bn_w1, hcl_conv2_1_bn_b1, hcl_conv2_1_conv2, hcl_conv2_1_bn_w2, hcl_conv2_1_bn_b2,
+                hcl_conv3_0_conv1, hcl_conv3_0_bn_w1, hcl_conv3_0_bn_b1, hcl_conv3_0_conv2, hcl_conv3_0_bn_w2, hcl_conv3_0_bn_b2, hcl_conv3_0_convs, hcl_conv3_0_bn_ws, hcl_conv3_0_bn_bs,
+                hcl_conv3_1_conv1, hcl_conv3_1_bn_w1, hcl_conv3_1_bn_b1, hcl_conv3_1_conv2, hcl_conv3_1_bn_w2, hcl_conv3_1_bn_b2,
+                hcl_conv4_0_conv1, hcl_conv4_0_bn_w1, hcl_conv4_0_bn_b1, hcl_conv4_0_conv2, hcl_conv4_0_bn_w2, hcl_conv4_0_bn_b2, hcl_conv4_0_convs, hcl_conv4_0_bn_ws, hcl_conv4_0_bn_bs,
+                hcl_conv4_1_conv1, hcl_conv4_1_bn_w1, hcl_conv4_1_bn_b1, hcl_conv4_1_conv2, hcl_conv4_1_bn_w2, hcl_conv4_1_bn_b2,
+                hcl_conv5_0_conv1, hcl_conv5_0_bn_w1, hcl_conv5_0_bn_b1, hcl_conv5_0_conv2, hcl_conv5_0_bn_w2, hcl_conv5_0_bn_b2, hcl_conv5_0_convs, hcl_conv5_0_bn_ws, hcl_conv5_0_bn_bs,
+                hcl_conv5_1_conv1, hcl_conv5_1_bn_w1, hcl_conv5_1_bn_b1, hcl_conv5_1_conv2, hcl_conv5_1_bn_w2, hcl_conv5_1_bn_b2,
+                hcl_fc_weight, hcl_fc_bias,
+                hcl_out
+            )
 
-        print(f'Iter {n_iter} run finished')
-        np_out = hcl_out.asnumpy()
-        tensor_out = torch.tensor(np_out)
+            print(f'Iter {n_iter} run finished')
+            np_out = hcl_out.asnumpy()
+            tensor_out = torch.tensor(np_out)
 
-        # np_conv1 = hcl_conv1_out.asnumpy()
-        # tensor_conv1_out = torch.tensor(np_conv1, dtype=torch.float64)
-        # np_conv2 = hcl_conv2_out.asnumpy()
-        # tensor_conv2_out = torch.tensor(np_conv2, dtype=torch.float64)
-        # np_conv3 = hcl_conv3_out.asnumpy()
-        # tensor_conv3_out = torch.tensor(np_conv3, dtype=torch.float64)
-        # np_conv4 = hcl_conv4_out.asnumpy()
-        # tensor_conv4_out = torch.tensor(np_conv4, dtype=torch.float64)
-        # np_conv5 = hcl_conv5_out.asnumpy()
-        # tensor_conv5_out = torch.tensor(np_conv5, dtype=torch.float64)
-        # np_avg = hcl_avg_out.asnumpy()
-        # tensor_avg_out = torch.tensor(np_avg, dtype=torch.float64)
-        # print(tensor_out)
+            # np_conv1 = hcl_conv1_out.asnumpy()
+            # tensor_conv1_out = torch.tensor(np_conv1, dtype=torch.float64)
+            # np_conv2 = hcl_conv2_out.asnumpy()
+            # tensor_conv2_out = torch.tensor(np_conv2, dtype=torch.float64)
+            # np_conv3 = hcl_conv3_out.asnumpy()
+            # tensor_conv3_out = torch.tensor(np_conv3, dtype=torch.float64)
+            # np_conv4 = hcl_conv4_out.asnumpy()
+            # tensor_conv4_out = torch.tensor(np_conv4, dtype=torch.float64)
+            # np_conv5 = hcl_conv5_out.asnumpy()
+            # tensor_conv5_out = torch.tensor(np_conv5, dtype=torch.float64)
+            # np_avg = hcl_avg_out.asnumpy()
+            # tensor_avg_out = torch.tensor(np_avg, dtype=torch.float64)
+            # print(tensor_out)
 
-        _, pred = tensor_out.topk(5, 1, largest=True, sorted=True)
-        label = label.view(label.size(0), -1).expand_as(pred)
-        # print(pred)
-        # return
-        correct = pred.eq(label).float()
+            _, pred = tensor_out.topk(5, 1, largest=True, sorted=True)
+            label = label.view(label.size(0), -1).expand_as(pred)
+            # print(pred)
+            # return
+            correct = pred.eq(label).float()
 
-        # compute top 5
-        correct_5 += correct[:, :5].sum()
+            # compute top 5
+            correct_5 += correct[:, :5].sum()
 
-        # compute top1
-        correct_1 += correct[:, :1].sum()
+            # compute top1
+            correct_1 += correct[:, :1].sum()
 
     print("Top 1 err: ", 1 - correct_1 / len(cifar100_test_loader.dataset))
     print("Top 5 err: ", 1 - correct_5 / len(cifar100_test_loader.dataset))
