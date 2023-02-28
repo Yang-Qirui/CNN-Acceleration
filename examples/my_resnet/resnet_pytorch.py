@@ -11,6 +11,7 @@
 import torch
 import torch.nn as nn
 import numpy as np
+from torchinfo import summary
 
 
 class BasicBlock(nn.Module):
@@ -53,7 +54,6 @@ class BasicBlock(nn.Module):
     def forward(self, x):
         out = nn.ReLU(inplace=True)(
             self.residual_function(x) + self.shortcut(x))
-        print(f"{self.name},{out.shape}\n")
         return out
 
 
@@ -91,7 +91,6 @@ class BottleNeck(nn.Module):
     def forward(self, x):
         out = nn.ReLU(inplace=True)(
             self.residual_function(x) + self.shortcut(x))
-        print(f"{self.name},{out.shape}")
         return out
 
 
@@ -145,9 +144,13 @@ class ResNet(nn.Module):
         output = self.conv1(x)
         print('conv1', output.shape, "\n")
         output = self.conv2_x(output)
+        print('conv2', output.shape, "\n")
         output = self.conv3_x(output)
+        print('conv3', output.shape, "\n")
         output = self.conv4_x(output)
+        print('conv4', output.shape, "\n")
         output = self.conv5_x(output)
+        print('conv5', output.shape, "\n")
         output = self.avg_pool(output)
         print('avg_pool', output.shape, "\n")
         output = output.view(output.size(0), -1)
@@ -193,8 +196,15 @@ def test():
     input_tensor = torch.Tensor(input)
     print("input", input_tensor.shape)
     net = resnet18()
-    net(input_tensor)
+    out = net(input_tensor)
+    print("output", out.shape)
 
 
 if __name__ == "__main__":
+    # model = resnet18()
+    # summary(model, (32, 3, 32, 32))
+    # model = torch.load(
+    #     '../../weights/resnet18/resnet18-199-best.pth', map_location=torch.device('cpu'))
+    # for k, v in model.items():
+    #     print(k, v.shape)
     test()

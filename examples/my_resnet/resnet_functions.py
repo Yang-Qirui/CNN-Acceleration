@@ -5,11 +5,20 @@
 import heterocl as hcl
 import heterocl.tvm as tvm
 from collections import OrderedDict
+import numpy as np
+from torch.utils.data import DataLoader
+import torchvision
+import torchvision.transforms as transforms
 
+CIFAR100_TEST_MEAN = (0.5088964127604166,
+                      0.48739301317401956, 0.44194221124387256)
+CIFAR100_TEST_STD = (0.2682515741720801,
+                     0.2573637364478126, 0.2770957707973042)
 
 ###############################################################################
 # helper functions
 ###############################################################################
+
 
 def simplify(expr):
     return tvm.ir_pass.Simplify(expr) if isinstance(expr, tvm.expr.Expr) else expr
@@ -66,7 +75,7 @@ def pad(data, pad_before, pad_after=None, pad_value=0.0, name="pad"):
 # this function is the heteroCL equivalent of the torch.nn.Conv2d function
 # in the PyTorch library.
 ###############################################################################
-def conv2d(Input, Filter, name="conv2d", stride=[1, 1], padding=[[1, 1], [1, 1]], out_dtype=hcl.Fixed(16, 8), print_out=False):
+def conv2d(Input, Filter, name="conv2d", stride=[1, 1], padding=[[1, 1], [1, 1]], out_dtype=hcl.Float(), print_out=False):
     batch, in_channel, in_height, in_width = Input.shape
     num_filter, channel, kernel_h, kernel_w = Filter.shape
     stride_h, stride_w = stride
@@ -108,53 +117,61 @@ def conv2d(Input, Filter, name="conv2d", stride=[1, 1], padding=[[1, 1], [1, 1]]
 
 def relu(data, name='relu'):
     # CPU Backend
-    x1 = hcl.compute(data.shape, lambda *y: hcl.select(data[y] < 0, hcl.cast(data.dtype, 0), data[y]), name=name+'_x1')
-    x2 = hcl.compute(x1.shape, lambda *y: hcl.select(x1[y] > 1, hcl.cast(data.dtype, 1), x1[y]), name=name)
-    return x2
+    # x1 = hcl.compute(data.shape, lambda *y: hcl.select(
+    #     data[y] < 0, hcl.cast(data.dtype, 0), data[y]), name=name+'_x1')
+    # x2 = hcl.compute(
+    #     x1.shape, lambda *y: hcl.select(x1[y] > 1, hcl.cast(data.dtype, 1), x1[y]), name=name)
+    # return x2
     # HLS Backend
-    # return hcl.compute(data.shape, lambda *y:
-    #                   hcl.select(data[y] < 0,
-    #                              hcl.cast(data.dtype, 0),
-    #                              hcl.select(data[y] > 1, hcl.cast(data.dtype, 1), data[y])),
-    #                   name=name)
+    return hcl.compute(data.shape, lambda *y:
+                       hcl.select(data[y] <= 0,
+                                  0, data[y]),
+                       name=name, dtype=data.dtype)
 
 
-def linear(input, weight, name='linear'):
-    batch, in_feature = input.shape
-    kernel_h, out_feature = weight.shape
+def linear(data, weight, bias, name='linear'):
+    batch, in_feature = data.shape
+    h, w = weight.shape
+    # weight_T = hcl.placeholder((w, h,))
+    # with hcl.for_(0, h) as i:
+    #     with hcl.for_(0, w) as j:
+    #         weight_T[j, i] = weight[i, j]
+    # kernel_h, out_feature = weight_T.shape
+    out = hcl.placeholder((batch, h), name=name)
+    with hcl.for_(0, batch) as i:
+        with hcl.for_(0, h) as k:
+            with hcl.for_(0, w) as j:
+                out[i, k] += data[i, j] * weight[k, j]
+            out[i, k] += bias[k]
+
+    return out
+
+    weight_transpose = hcl.compute(
+        (weight.shape[1], weight.shape[0]), lambda x, y: weight[y, x])
+    _, out_feature = w, h
     din_feature = hcl.reduce_axis(0, in_feature)
-    dkernel_h = hcl.reduce_axis(0, kernel_h)
     return hcl.compute((batch, out_feature), lambda x, y: hcl.sum(
-        input[x, y + din_feature] * weight[y + dkernel_h, x], axis=[din_feature, dkernel_h]
-    ), name=name)
+        data[x, din_feature] * weight_transpose[din_feature, x] + bias[y], axis=[din_feature]
+    ), name=name, dtype=data.dtype)
 
 
-def avgpool2d(data, output_size=[1, 1], stride=1, padding=0, name='avg_pool'):
-    avg = hcl.reducer(0, lambda x, y: (x+y)/2, data.dtype)
-    output_h, output_w = output_size
+def avgpool2d(data, stride=1, name='avg_pool2d'):
     batch, channel, height, width = data.shape
-    stride_h = stride_w = stride
-    kernel_h = height + 2 * padding - stride_h * (output_h - 1)
-    kernel_w = width + 2 * padding - stride_w * (output_w - 1)
-    dheight = hcl.reduce_axis(0, kernel_h)
-    dwidth = hcl.reduce_axis(0, kernel_w)
+    avg = hcl.reducer(
+        0,
+        lambda x, y: x / (width * height) + y,
+        data.dtype)
+    pooling_h = height
+    pooling_w = width
+    dheight = hcl.reduce_axis(0, pooling_h)
+    dwidth = hcl.reduce_axis(0, pooling_w)
     return hcl.compute(
-        (batch, channel, output_h, output_w),
-        lambda i, c, h, w: avg(data[i, c, h *
-                                    stride_h +
-                                    dheight, w *
-                                    stride_w +
+        (batch, channel, 1, 1),
+        lambda i, c, h, w: avg(data[i, c, h +
+                                    dheight, w +
                                     dwidth], axis=[dheight, dwidth]),
         name=name, dtype=data.dtype,
-        attrs=OrderedDict([
-            ('out_img_w', output_w),
-            ('out_img_h', output_h),
-            ('in_num', channel),
-            ('kernel_h', kernel_h),
-            ('kernel_w', kernel_w),
-            ('stride_h', stride),
-            ('stride_w', stride),
-            ('app_name', tvm.make.StringImm('avg_pool'))]))
+    )
 
 
 ###############################################################################
@@ -207,16 +224,51 @@ def maxpool2d(data, pool_size=2, stride=2, padding=0, name='max_pool2d'):
 # batch normalization
 
 
-def batchnorm2d(data, a, b, axis=3, name="batch_norm", out_dtype=hcl.Fixed(16, 8), print_out=False):
-    def get_axis(axis, *indices):
-        indices = list(indices[0])
-        return (indices[axis],)
-
-    out = hcl.compute(data.shape, lambda *x: a[get_axis(axis, x)]
-                      * data[x] + b[get_axis(axis, x)], dtype=out_dtype, name=name)
+def batchnorm2d(data, a, b, name="batch_norm", out_dtype=hcl.Float()):
+    out = hcl.compute(data.shape, lambda i, c, h, w: a[c]
+                      * data[i, c, h, w] + b[c], dtype=out_dtype, name=name)
     # observe = hcl.compute((data.shape[-1], ), lambda x : out[0, 0, 0, x], name="observe")
     # data_val = hcl.compute((data.shape[-1], ), lambda x : data[0, 0, 0, x], name="data_val")
     # if print_out:
     # hcl.print(data_val)
     # hcl.print(observe)
     return out
+
+# def batchnorm2d(data, a, b, axis=1, name="batch_norm", out_dtype=hcl.Float(), print_out=False):
+#     def get_axis(axis, *indices):
+#         indices = list(indices[0])
+#         return (indices[axis],)
+
+#     out = hcl.compute(data.shape, lambda *x: a[get_axis(axis, x)]
+#                       * data[x] + b[get_axis(axis, x)], dtype=out_dtype, name=name)
+#     # observe = hcl.compute((data.shape[-1], ), lambda x : out[0, 0, 0, x], name="observe")
+#     # data_val = hcl.compute((data.shape[-1], ), lambda x : data[0, 0, 0, x], name="data_val")
+#     # if print_out:
+#     # hcl.print(data_val)
+#     # hcl.print(observe)
+#     return out
+
+
+def get_test_dataloader(mean, std, batch_size=16, num_workers=2, shuffle=False):
+    """ return training dataloader
+    Args:
+        mean: mean of cifar100 test dataset
+        std: std of cifar100 test dataset
+        path: path to cifar100 test python dataset
+        batch_size: dataloader batchsize
+        num_workers: dataloader num_works
+        shuffle: whether to shuffle
+    Returns: cifar100_test_loader:torch dataloader object
+    """
+
+    transform_test = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(mean, std)
+    ])
+    # cifar100_test = CIFAR100Test(path, transform=transform_test)
+    cifar100_test = torchvision.datasets.CIFAR100(
+        root="../../dataset", train=False, download=True, transform=transform_test)
+    cifar100_test_loader = DataLoader(
+        cifar100_test, shuffle=shuffle, num_workers=num_workers, batch_size=batch_size)
+
+    return cifar100_test_loader
