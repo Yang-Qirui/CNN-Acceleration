@@ -131,28 +131,29 @@ def relu(data, name='relu'):
 
 def linear(data, weight, bias, name='linear'):
     batch, in_feature = data.shape
-    h, w = weight.shape
-    # weight_T = hcl.placeholder((w, h,))
+    out_feature, w = weight.shape  # h=100, w=512
+    weight_T = hcl.compute((w, out_feature), lambda x, y: weight[y, x])
     # with hcl.for_(0, h) as i:
     #     with hcl.for_(0, w) as j:
     #         weight_T[j, i] = weight[i, j]
     # kernel_h, out_feature = weight_T.shape
-    out = hcl.placeholder((batch, h), name=name)
+    out = hcl.placeholder((batch, out_feature), name=name)
     with hcl.for_(0, batch) as i:
-        with hcl.for_(0, h) as k:
+        with hcl.for_(0, out_feature) as k:
             with hcl.for_(0, w) as j:
-                out[i, k] += data[i, j] * weight[k, j]
-            out[i, k] += bias[k]
+                out[i, k] = data[i, j] * weight_T[j, k] + out[i, k]
+            out[i, k] = out[i, k] + bias[k]
 
     return out
-
+    batch, in_feature = data.shape
+    h, w = weight.shape
     weight_transpose = hcl.compute(
         (weight.shape[1], weight.shape[0]), lambda x, y: weight[y, x])
     _, out_feature = w, h
     din_feature = hcl.reduce_axis(0, in_feature)
     return hcl.compute((batch, out_feature), lambda x, y: hcl.sum(
-        data[x, din_feature] * weight_transpose[din_feature, x] + bias[y], axis=[din_feature]
-    ), name=name, dtype=data.dtype)
+        data[x, din_feature] * weight_transpose[din_feature, x], axis=[din_feature]
+    ) + bias[y], name=name, dtype=data.dtype)
 
 
 def avgpool2d(data, stride=1, name='avg_pool2d'):

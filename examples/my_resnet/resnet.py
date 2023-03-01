@@ -230,77 +230,77 @@ def run(batch_size):
         fc_weight, fc_bias
     ] = load_np_params18("../../weights/resnet18/resnet18-199-best.pth")
 
-    hcl_conv1_x_weight = hcl.asarray(conv1_x_weight.astype(float))
-    hcl_bn1_x_weight = hcl.asarray(bn1_x_weight.astype(float))
-    hcl_bn1_x_bias = hcl.asarray(bn1_x_bias.astype(float))
+    hcl_conv1_x_weight = hcl.asarray(conv1_x_weight.astype(np.float32))
+    hcl_bn1_x_weight = hcl.asarray(bn1_x_weight.astype(np.float32))
+    hcl_bn1_x_bias = hcl.asarray(bn1_x_bias.astype(np.float32))
 
-    hcl_conv2_0_conv1 = hcl.asarray(conv2_0_conv1.astype(float))
-    hcl_conv2_0_bn_w1 = hcl.asarray(conv2_0_bn_w1.astype(float))
-    hcl_conv2_0_bn_b1 = hcl.asarray(conv2_0_bn_b1.astype(float))
-    hcl_conv2_0_conv2 = hcl.asarray(conv2_0_conv2.astype(float))
-    hcl_conv2_0_bn_w2 = hcl.asarray(conv2_0_bn_w2.astype(float))
-    hcl_conv2_0_bn_b2 = hcl.asarray(conv2_0_bn_b2.astype(float))
+    hcl_conv2_0_conv1 = hcl.asarray(conv2_0_conv1.astype(np.float32))
+    hcl_conv2_0_bn_w1 = hcl.asarray(conv2_0_bn_w1.astype(np.float32))
+    hcl_conv2_0_bn_b1 = hcl.asarray(conv2_0_bn_b1.astype(np.float32))
+    hcl_conv2_0_conv2 = hcl.asarray(conv2_0_conv2.astype(np.float32))
+    hcl_conv2_0_bn_w2 = hcl.asarray(conv2_0_bn_w2.astype(np.float32))
+    hcl_conv2_0_bn_b2 = hcl.asarray(conv2_0_bn_b2.astype(np.float32))
 
-    hcl_conv2_1_conv1 = hcl.asarray(conv2_1_conv1.astype(float))
-    hcl_conv2_1_bn_w1 = hcl.asarray(conv2_1_bn_w1.astype(float))
-    hcl_conv2_1_bn_b1 = hcl.asarray(conv2_1_bn_b1.astype(float))
-    hcl_conv2_1_conv2 = hcl.asarray(conv2_1_conv2.astype(float))
-    hcl_conv2_1_bn_w2 = hcl.asarray(conv2_1_bn_w2.astype(float))
-    hcl_conv2_1_bn_b2 = hcl.asarray(conv2_1_bn_b2.astype(float))
+    hcl_conv2_1_conv1 = hcl.asarray(conv2_1_conv1.astype(np.float32))
+    hcl_conv2_1_bn_w1 = hcl.asarray(conv2_1_bn_w1.astype(np.float32))
+    hcl_conv2_1_bn_b1 = hcl.asarray(conv2_1_bn_b1.astype(np.float32))
+    hcl_conv2_1_conv2 = hcl.asarray(conv2_1_conv2.astype(np.float32))
+    hcl_conv2_1_bn_w2 = hcl.asarray(conv2_1_bn_w2.astype(np.float32))
+    hcl_conv2_1_bn_b2 = hcl.asarray(conv2_1_bn_b2.astype(np.float32))
 
-    hcl_conv3_0_conv1 = hcl.asarray(conv3_0_conv1.astype(float))
-    hcl_conv3_0_bn_w1 = hcl.asarray(conv3_0_bn_w1.astype(float))
-    hcl_conv3_0_bn_b1 = hcl.asarray(conv3_0_bn_b1.astype(float))
-    hcl_conv3_0_conv2 = hcl.asarray(conv3_0_conv2.astype(float))
-    hcl_conv3_0_bn_w2 = hcl.asarray(conv3_0_bn_w2.astype(float))
-    hcl_conv3_0_bn_b2 = hcl.asarray(conv3_0_bn_b2.astype(float))
-    hcl_conv3_0_convs = hcl.asarray(conv3_0_convs.astype(float))
-    hcl_conv3_0_bn_ws = hcl.asarray(conv3_0_bn_ws.astype(float))
-    hcl_conv3_0_bn_bs = hcl.asarray(conv3_0_bn_bs.astype(float))
+    hcl_conv3_0_conv1 = hcl.asarray(conv3_0_conv1.astype(np.float32))
+    hcl_conv3_0_bn_w1 = hcl.asarray(conv3_0_bn_w1.astype(np.float32))
+    hcl_conv3_0_bn_b1 = hcl.asarray(conv3_0_bn_b1.astype(np.float32))
+    hcl_conv3_0_conv2 = hcl.asarray(conv3_0_conv2.astype(np.float32))
+    hcl_conv3_0_bn_w2 = hcl.asarray(conv3_0_bn_w2.astype(np.float32))
+    hcl_conv3_0_bn_b2 = hcl.asarray(conv3_0_bn_b2.astype(np.float32))
+    hcl_conv3_0_convs = hcl.asarray(conv3_0_convs.astype(np.float32))
+    hcl_conv3_0_bn_ws = hcl.asarray(conv3_0_bn_ws.astype(np.float32))
+    hcl_conv3_0_bn_bs = hcl.asarray(conv3_0_bn_bs.astype(np.float32))
 
-    hcl_conv3_1_conv1 = hcl.asarray(conv3_1_conv1.astype(float))
-    hcl_conv3_1_bn_w1 = hcl.asarray(conv3_1_bn_w1.astype(float))
-    hcl_conv3_1_bn_b1 = hcl.asarray(conv3_1_bn_b1.astype(float))
-    hcl_conv3_1_conv2 = hcl.asarray(conv3_1_conv2.astype(float))
-    hcl_conv3_1_bn_w2 = hcl.asarray(conv3_1_bn_w2.astype(float))
-    hcl_conv3_1_bn_b2 = hcl.asarray(conv3_1_bn_b2.astype(float))
+    hcl_conv3_1_conv1 = hcl.asarray(conv3_1_conv1.astype(np.float32))
+    hcl_conv3_1_bn_w1 = hcl.asarray(conv3_1_bn_w1.astype(np.float32))
+    hcl_conv3_1_bn_b1 = hcl.asarray(conv3_1_bn_b1.astype(np.float32))
+    hcl_conv3_1_conv2 = hcl.asarray(conv3_1_conv2.astype(np.float32))
+    hcl_conv3_1_bn_w2 = hcl.asarray(conv3_1_bn_w2.astype(np.float32))
+    hcl_conv3_1_bn_b2 = hcl.asarray(conv3_1_bn_b2.astype(np.float32))
 
-    hcl_conv4_0_conv1 = hcl.asarray(conv4_0_conv1.astype(float))
-    hcl_conv4_0_bn_w1 = hcl.asarray(conv4_0_bn_w1.astype(float))
-    hcl_conv4_0_bn_b1 = hcl.asarray(conv4_0_bn_b1.astype(float))
-    hcl_conv4_0_conv2 = hcl.asarray(conv4_0_conv2.astype(float))
-    hcl_conv4_0_bn_w2 = hcl.asarray(conv4_0_bn_w2.astype(float))
-    hcl_conv4_0_bn_b2 = hcl.asarray(conv4_0_bn_b2.astype(float))
-    hcl_conv4_0_convs = hcl.asarray(conv4_0_convs.astype(float))
-    hcl_conv4_0_bn_ws = hcl.asarray(conv4_0_bn_ws.astype(float))
-    hcl_conv4_0_bn_bs = hcl.asarray(conv4_0_bn_bs.astype(float))
+    hcl_conv4_0_conv1 = hcl.asarray(conv4_0_conv1.astype(np.float32))
+    hcl_conv4_0_bn_w1 = hcl.asarray(conv4_0_bn_w1.astype(np.float32))
+    hcl_conv4_0_bn_b1 = hcl.asarray(conv4_0_bn_b1.astype(np.float32))
+    hcl_conv4_0_conv2 = hcl.asarray(conv4_0_conv2.astype(np.float32))
+    hcl_conv4_0_bn_w2 = hcl.asarray(conv4_0_bn_w2.astype(np.float32))
+    hcl_conv4_0_bn_b2 = hcl.asarray(conv4_0_bn_b2.astype(np.float32))
+    hcl_conv4_0_convs = hcl.asarray(conv4_0_convs.astype(np.float32))
+    hcl_conv4_0_bn_ws = hcl.asarray(conv4_0_bn_ws.astype(np.float32))
+    hcl_conv4_0_bn_bs = hcl.asarray(conv4_0_bn_bs.astype(np.float32))
 
-    hcl_conv4_1_conv1 = hcl.asarray(conv4_1_conv1.astype(float))
-    hcl_conv4_1_bn_w1 = hcl.asarray(conv4_1_bn_w1.astype(float))
-    hcl_conv4_1_bn_b1 = hcl.asarray(conv4_1_bn_b1.astype(float))
-    hcl_conv4_1_conv2 = hcl.asarray(conv4_1_conv2.astype(float))
-    hcl_conv4_1_bn_w2 = hcl.asarray(conv4_1_bn_w2.astype(float))
-    hcl_conv4_1_bn_b2 = hcl.asarray(conv4_1_bn_b2.astype(float))
+    hcl_conv4_1_conv1 = hcl.asarray(conv4_1_conv1.astype(np.float32))
+    hcl_conv4_1_bn_w1 = hcl.asarray(conv4_1_bn_w1.astype(np.float32))
+    hcl_conv4_1_bn_b1 = hcl.asarray(conv4_1_bn_b1.astype(np.float32))
+    hcl_conv4_1_conv2 = hcl.asarray(conv4_1_conv2.astype(np.float32))
+    hcl_conv4_1_bn_w2 = hcl.asarray(conv4_1_bn_w2.astype(np.float32))
+    hcl_conv4_1_bn_b2 = hcl.asarray(conv4_1_bn_b2.astype(np.float32))
 
-    hcl_conv5_0_conv1 = hcl.asarray(conv5_0_conv1.astype(float))
-    hcl_conv5_0_bn_w1 = hcl.asarray(conv5_0_bn_w1.astype(float))
-    hcl_conv5_0_bn_b1 = hcl.asarray(conv5_0_bn_b1.astype(float))
-    hcl_conv5_0_conv2 = hcl.asarray(conv5_0_conv2.astype(float))
-    hcl_conv5_0_bn_w2 = hcl.asarray(conv5_0_bn_w2.astype(float))
-    hcl_conv5_0_bn_b2 = hcl.asarray(conv5_0_bn_b2.astype(float))
-    hcl_conv5_0_convs = hcl.asarray(conv5_0_convs.astype(float))
-    hcl_conv5_0_bn_ws = hcl.asarray(conv5_0_bn_ws.astype(float))
-    hcl_conv5_0_bn_bs = hcl.asarray(conv5_0_bn_bs.astype(float))
+    hcl_conv5_0_conv1 = hcl.asarray(conv5_0_conv1.astype(np.float32))
+    hcl_conv5_0_bn_w1 = hcl.asarray(conv5_0_bn_w1.astype(np.float32))
+    hcl_conv5_0_bn_b1 = hcl.asarray(conv5_0_bn_b1.astype(np.float32))
+    hcl_conv5_0_conv2 = hcl.asarray(conv5_0_conv2.astype(np.float32))
+    hcl_conv5_0_bn_w2 = hcl.asarray(conv5_0_bn_w2.astype(np.float32))
+    hcl_conv5_0_bn_b2 = hcl.asarray(conv5_0_bn_b2.astype(np.float32))
+    hcl_conv5_0_convs = hcl.asarray(conv5_0_convs.astype(np.float32))
+    hcl_conv5_0_bn_ws = hcl.asarray(conv5_0_bn_ws.astype(np.float32))
+    hcl_conv5_0_bn_bs = hcl.asarray(conv5_0_bn_bs.astype(np.float32))
 
-    hcl_conv5_1_conv1 = hcl.asarray(conv5_1_conv1.astype(float))
-    hcl_conv5_1_bn_w1 = hcl.asarray(conv5_1_bn_w1.astype(float))
-    hcl_conv5_1_bn_b1 = hcl.asarray(conv5_1_bn_b1.astype(float))
-    hcl_conv5_1_conv2 = hcl.asarray(conv5_1_conv2.astype(float))
-    hcl_conv5_1_bn_w2 = hcl.asarray(conv5_1_bn_w2.astype(float))
-    hcl_conv5_1_bn_b2 = hcl.asarray(conv5_1_bn_b2.astype(float))
+    hcl_conv5_1_conv1 = hcl.asarray(conv5_1_conv1.astype(np.float32))
+    hcl_conv5_1_bn_w1 = hcl.asarray(conv5_1_bn_w1.astype(np.float32))
+    hcl_conv5_1_bn_b1 = hcl.asarray(conv5_1_bn_b1.astype(np.float32))
+    hcl_conv5_1_conv2 = hcl.asarray(conv5_1_conv2.astype(np.float32))
+    hcl_conv5_1_bn_w2 = hcl.asarray(conv5_1_bn_w2.astype(np.float32))
+    hcl_conv5_1_bn_b2 = hcl.asarray(conv5_1_bn_b2.astype(np.float32))
 
-    hcl_fc_weight = hcl.asarray(fc_weight.astype(float))
-    hcl_fc_bias = hcl.asarray(fc_bias.astype(float))
+    hcl_fc_weight = hcl.asarray(fc_weight.astype(np.float32))
+    hcl_fc_bias = hcl.asarray(fc_bias.astype(np.float32))
 
     # hcl_conv1_out = hcl.asarray(np.zeros((batch_size, 64, 32, 32)))
     # hcl_conv2_out = hcl.asarray(np.zeros((batch_size, 64, 32, 32)))
@@ -308,8 +308,6 @@ def run(batch_size):
     # hcl_conv4_out = hcl.asarray(np.zeros((batch_size, 256, 8, 8)))
     # hcl_conv5_out = hcl.asarray(np.zeros((batch_size, 512, 4, 4)))
     # hcl_avg_out = hcl.asarray(np.zeros((batch_size, 512)))
-    hcl_out = hcl.asarray(
-        np.zeros((batch_size, 100)).astype(float))
 
     f = create_resnet18(batch_size, 'llvm')
 
@@ -321,7 +319,10 @@ def run(batch_size):
 
     for n_iter, (image, label) in enumerate(cifar100_test_loader):
         if label.shape[0] == batch_size:
-            hcl_input = hcl.asarray(image.numpy().astype(float))
+            hcl_input = hcl.asarray(image.numpy().astype(np.float32))
+            hcl_out = hcl.asarray(
+                np.zeros((batch_size, 100)).astype(np.float32))
+
             print(f'Iter {n_iter} run started')
             f(
                 hcl_input,
@@ -338,7 +339,6 @@ def run(batch_size):
                 hcl_out
             )
 
-            print(f'Iter {n_iter} run finished')
             np_out = hcl_out.asnumpy()
             tensor_out = torch.tensor(np_out)
 
@@ -354,11 +354,12 @@ def run(batch_size):
             # tensor_conv5_out = torch.tensor(np_conv5, dtype=torch.float64)
             # np_avg = hcl_avg_out.asnumpy()
             # tensor_avg_out = torch.tensor(np_avg, dtype=torch.float64)
-            # print(tensor_out)
 
             _, pred = tensor_out.topk(5, 1, largest=True, sorted=True)
+            print(pred)
+            print(label)
             label = label.view(label.size(0), -1).expand_as(pred)
-            # print(pred)
+
             # return
             correct = pred.eq(label).float()
 
@@ -373,4 +374,4 @@ def run(batch_size):
 
 
 if __name__ == "__main__":
-    run(4)
+    run(2)
