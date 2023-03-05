@@ -3,6 +3,8 @@ from resnet_model import resnet18
 from resnet_functions import CIFAR100_TEST_MEAN, CIFAR100_TEST_STD, get_test_dataloader
 import torch
 import numpy as np
+import os
+import json
 
 hcl.init(hcl.Float())
 
@@ -373,5 +375,17 @@ def run(batch_size):
     print("Top 5 err: ", 1 - correct_5 / len(cifar100_test_loader.dataset))
 
 
+def save_weight():
+    weight_list = load_np_params18(
+        "../../weights/resnet18/resnet18-199-best.pth")
+    os.mkdir("../../weights/resnet18-weights-json")
+    for i, weight in enumerate(weight_list):
+        data = weight.tolist()
+        with open(f'../../weights/resnet18-weights-json/layer{i}.json', 'w') as f:
+            jdata = json.dumps(data)
+            f.write(jdata)
+
+
 if __name__ == "__main__":
-    run(2)
+    # run(2)
+    save_weight()

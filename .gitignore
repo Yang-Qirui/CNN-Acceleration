@@ -1,3 +1,4 @@
-dataset/
+dataset/cifar100-python/
 weights/
 *.log
+dataset/

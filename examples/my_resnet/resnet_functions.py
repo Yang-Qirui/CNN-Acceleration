@@ -145,15 +145,15 @@ def linear(data, weight, bias, name='linear'):
             out[i, k] = out[i, k] + bias[k]
 
     return out
-    batch, in_feature = data.shape
-    h, w = weight.shape
-    weight_transpose = hcl.compute(
-        (weight.shape[1], weight.shape[0]), lambda x, y: weight[y, x])
-    _, out_feature = w, h
-    din_feature = hcl.reduce_axis(0, in_feature)
-    return hcl.compute((batch, out_feature), lambda x, y: hcl.sum(
-        data[x, din_feature] * weight_transpose[din_feature, x], axis=[din_feature]
-    ) + bias[y], name=name, dtype=data.dtype)
+    # batch, in_feature = data.shape
+    # h, w = weight.shape
+    # weight_transpose = hcl.compute(
+    #     (weight.shape[1], weight.shape[0]), lambda x, y: weight[y, x])
+    # _, out_feature = w, h
+    # din_feature = hcl.reduce_axis(0, in_feature)
+    # return hcl.compute((batch, out_feature), lambda x, y: hcl.sum(
+    #     data[x, din_feature] * weight_transpose[din_feature, x], axis=[din_feature]
+    # ) + bias[y], name=name, dtype=data.dtype)
 
 
 def avgpool2d(data, stride=1, name='avg_pool2d'):

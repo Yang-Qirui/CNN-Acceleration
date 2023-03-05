@@ -1,0 +1,3 @@
+/home/ubuntu/heterocl/examples/my_resnet/c_resnet/CMakeFiles/rebuild_cache.dir
+/home/ubuntu/heterocl/examples/my_resnet/c_resnet/CMakeFiles/edit_cache.dir
+/home/ubuntu/heterocl/examples/my_resnet/c_resnet/CMakeFiles/resnet18_test.dir

@@ -3,7 +3,9 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "~/libtorch/include/**",
+                "~/torchvision/include/**"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
