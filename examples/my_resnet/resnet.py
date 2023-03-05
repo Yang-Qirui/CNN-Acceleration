@@ -380,7 +380,8 @@ def save_weight():
         "../../weights/resnet18/resnet18-199-best.pth")
     os.mkdir("../../weights/resnet18-weights-json")
     for i, weight in enumerate(weight_list):
-        data = weight.tolist()
+        data = {}
+        data[str(i)] = weight.tolist()
         with open(f'../../weights/resnet18-weights-json/layer{i}.json', 'w') as f:
             jdata = json.dumps(data)
             f.write(jdata)
