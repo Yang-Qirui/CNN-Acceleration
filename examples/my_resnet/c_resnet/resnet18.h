@@ -1,3 +1,4 @@
+#pragma once
 #include <ap_int.h>
 #include <ap_fixed.h>
 #include <ap_axi_sdata.h>
@@ -5,10 +6,160 @@
 #include <hls_math.h>
 #include <math.h>
 #include <stdint.h>
-void default_function(float input_image[32][3][32][32], float conv1_weight[64][3][3][3], float bn1_weight[64], float bn1_bias[64], float conv2_weight1[64][64][3][3], float bn2_weight1[64], float bn2_bias1[64], float conv2_weight2[64][64][3][3], float bn2_weight2[64], float bn2_bias2[64], float conv2_weight11[64][64][3][3], float bn2_weight11[64], float bn2_bias11[64], float conv2_weight21[64][64][3][3], float bn2_weight21[64], float bn2_bias21[64], float conv3_weight1[128][64][3][3], float bn3_weight1[128], float bn3_bias1[128], float conv3_weight2[128][128][3][3], float bn3_weight2[128], float bn3_bias2[128], float conv3_shortcut_weight[128][64][1][1], float bn3_shortcut_weight[128], float bn3_shortcut_bias[128], float conv3_weight11[128][128][3][3], float bn3_weight11[128], float bn3_bias11[128], float conv3_weight21[128][128][3][3], float bn3_weight21[128], float bn3_bias21[128], float conv4_weight1[256][128][3][3], float bn4_weight1[256], float bn4_bias1[256], float conv4_weight2[256][256][3][3], float bn4_weight2[256], float bn4_bias2[256], float conv4_shortcut_weight[256][128][1][1], float bn4_shortcut_weight[256], float bn4_shortcut_bias[256], float conv4_weight11[256][256][3][3], float bn4_weight11[256], float bn4_bias11[256], float conv4_weight21[256][256][3][3], float bn4_weight21[256], float bn4_bias21[256], float conv5_weight1[512][256][3][3], float bn5_weight1[512], float bn5_bias1[512], float conv5_weight2[512][512][3][3], float bn5_weight2[512], float bn5_bias2[512], float conv5_shortcut_weight[512][256][1][1], float bn5_shortcut_weight[512], float bn5_shortcut_bias[512], float conv5_weight11[512][512][3][3], float bn5_weight11[512], float bn5_bias11[512], float conv5_weight21[512][512][3][3], float bn5_weight21[512], float bn5_bias21[512], float fc_weight[100][512], float fc_bias[100], float linear[32][100])
+float conv2d_pad[32][3][34][34];
+float conv2d[32][64][32][32];
+float batch_norm[32][64][32][32];
+float relu[32][64][32][32];
+float basicblock_conv1_pad[32][64][34][34];
+float basicblock_conv1[32][64][32][32];
+float basicblock_bn1[32][64][32][32];
+float basicblock_relu[32][64][32][32];
+float basicblock_conv2_pad[32][64][34][34];
+float basicblock_conv2[32][64][32][32];
+float basicblock_bn2[32][64][32][32];
+float compute0[32][64][32][32];
+float bb_output_relu[32][64][32][32];
+float basicblock_conv1_pad1[32][64][34][34];
+float basicblock_conv11[32][64][32][32];
+float basicblock_bn11[32][64][32][32];
+float basicblock_relu1[32][64][32][32];
+float basicblock_conv2_pad1[32][64][34][34];
+float basicblock_conv21[32][64][32][32];
+float basicblock_bn21[32][64][32][32];
+float compute1[32][64][32][32];
+float bb_output_relu1[32][64][32][32];
+float basicblock_conv1_pad2[32][64][34][34];
+float basicblock_conv12[32][128][16][16];
+float basicblock_bn12[32][128][16][16];
+float basicblock_relu2[32][128][16][16];
+float basicblock_conv2_pad2[32][128][18][18];
+float basicblock_conv22[32][128][16][16];
+float basicblock_bn22[32][128][16][16];
+float basicblock_conv_shortcut[32][128][16][16];
+float basicblock_bn_shortcut[32][128][16][16];
+float compute2[32][128][16][16];
+float bb_output_relu2[32][128][16][16];
+float basicblock_conv1_pad3[32][128][18][18];
+float basicblock_conv13[32][128][16][16];
+float basicblock_bn13[32][128][16][16];
+float basicblock_relu3[32][128][16][16];
+float basicblock_conv2_pad3[32][128][18][18];
+float basicblock_conv23[32][128][16][16];
+float basicblock_bn23[32][128][16][16];
+float compute3[32][128][16][16];
+float bb_output_relu3[32][128][16][16];
+float basicblock_conv1_pad4[32][128][18][18];
+float basicblock_conv14[32][256][8][8];
+float basicblock_bn14[32][256][8][8];
+float basicblock_relu4[32][256][8][8];
+float basicblock_conv2_pad4[32][256][10][10];
+float basicblock_conv24[32][256][8][8];
+float basicblock_bn24[32][256][8][8];
+float basicblock_conv_shortcut1[32][256][8][8];
+float basicblock_bn_shortcut1[32][256][8][8];
+float compute4[32][256][8][8];
+float bb_output_relu4[32][256][8][8];
+float basicblock_conv1_pad5[32][256][10][10];
+float basicblock_conv15[32][256][8][8];
+float basicblock_bn15[32][256][8][8];
+float basicblock_relu5[32][256][8][8];
+float basicblock_conv2_pad5[32][256][10][10];
+float basicblock_conv25[32][256][8][8];
+float basicblock_bn25[32][256][8][8];
+float compute5[32][256][8][8];
+float bb_output_relu5[32][256][8][8];
+float basicblock_conv1_pad6[32][256][10][10];
+float basicblock_conv16[32][512][4][4];
+float basicblock_bn16[32][512][4][4];
+float basicblock_relu6[32][512][4][4];
+float basicblock_conv2_pad6[32][512][6][6];
+float basicblock_conv26[32][512][4][4];
+float basicblock_bn26[32][512][4][4];
+float basicblock_conv_shortcut2[32][512][4][4];
+float basicblock_bn_shortcut2[32][512][4][4];
+float compute6[32][512][4][4];
+float bb_output_relu6[32][512][4][4];
+float basicblock_conv1_pad7[32][512][6][6];
+float basicblock_conv17[32][512][4][4];
+float basicblock_bn17[32][512][4][4];
+float basicblock_relu7[32][512][4][4];
+float basicblock_conv2_pad7[32][512][6][6];
+float basicblock_conv27[32][512][4][4];
+float basicblock_bn27[32][512][4][4];
+float compute7[32][512][4][4];
+float bb_output_relu7[32][512][4][4];
+float avg_pool2d[32][512][1][1];
+float compute8[32][512];
+float compute9[512][100];
+
+
+void default_function(float (&input_image)[32][3][32][32], 
+                      float (&conv1_weight)[64][3][3][3], 
+                      float (&bn1_weight)[64], 
+                      float (&bn1_bias)[64],
+                      float (&conv2_weight1)[64][64][3][3], 
+                      float (&bn2_weight1)[64], 
+                      float (&bn2_bias1)[64], 
+                      float (&conv2_weight2)[64][64][3][3], 
+                      float (&bn2_weight2)[64], 
+                      float (&bn2_bias2)[64], 
+                      float (&conv2_weight11)[64][64][3][3], 
+                      float (&bn2_weight11)[64], 
+                      float (&bn2_bias11)[64], 
+                      float (&conv2_weight21)[64][64][3][3], 
+                      float (&bn2_weight21)[64], 
+                      float (&bn2_bias21)[64], 
+                      float (&conv3_weight1)[128][64][3][3], 
+                      float (&bn3_weight1)[128], 
+                      float (&bn3_bias1)[128], 
+                      float (&conv3_weight2)[128][128][3][3], 
+                      float (&bn3_weight2)[128], 
+                      float (&bn3_bias2)[128], 
+                      float (&conv3_shortcut_weight)[128][64][1][1], 
+                      float (&bn3_shortcut_weight)[128], 
+                      float (&bn3_shortcut_bias)[128], 
+                      float (&conv3_weight11)[128][128][3][3], 
+                      float (&bn3_weight11)[128], 
+                      float (&bn3_bias11)[128], 
+                      float (&conv3_weight21)[128][128][3][3], 
+                      float (&bn3_weight21)[128], 
+                      float (&bn3_bias21)[128], 
+                      float (&conv4_weight1)[256][128][3][3], 
+                      float (&bn4_weight1)[256], 
+                      float (&bn4_bias1)[256], 
+                      float (&conv4_weight2)[256][256][3][3], 
+                      float (&bn4_weight2)[256], 
+                      float (&bn4_bias2)[256], 
+                      float (&conv4_shortcut_weight)[256][128][1][1], 
+                      float (&bn4_shortcut_weight)[256], 
+                      float (&bn4_shortcut_bias)[256], 
+                      float (&conv4_weight11)[256][256][3][3], 
+                      float (&bn4_weight11)[256], 
+                      float (&bn4_bias11)[256], 
+                      float (&conv4_weight21)[256][256][3][3], 
+                      float (&bn4_weight21)[256],
+                      float (&bn4_bias21)[256], 
+                      float (&conv5_weight1)[512][256][3][3], 
+                      float (&bn5_weight1)[512], 
+                      float (&bn5_bias1)[512], 
+                      float (&conv5_weight2)[512][512][3][3], 
+                      float (&bn5_weight2)[512], 
+                      float (&bn5_bias2)[512], 
+                      float (&conv5_shortcut_weight)[512][256][1][1], 
+                      float (&bn5_shortcut_weight)[512], 
+                      float (&bn5_shortcut_bias)[512], 
+                      float (&conv5_weight11)[512][512][3][3], 
+                      float (&bn5_weight11)[512], 
+                      float (&bn5_bias11)[512], 
+                      float (&conv5_weight21)[512][512][3][3], 
+                      float (&bn5_weight21)[512], 
+                      float (&bn5_bias21)[512], 
+                      float (&fc_weight)[100][512], 
+                      float (&fc_bias)[100], 
+                      float (&linear)[32][100])
 {
+  // cout << "in" << endl;
   float _top;
-  float conv2d_pad[32][3][34][34];
   for (ap_int<32> indices = 0; indices < 32; ++indices)
   {
     for (ap_int<32> not_zero = 0; not_zero < 3; ++not_zero)
@@ -22,9 +173,9 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float conv2d[32][64][32][32];
   for (ap_int<32> nn = 0; nn < 32; ++nn)
   {
+          // cout << "loop " << nn << "\n";
     for (ap_int<32> ff = 0; ff < 64; ++ff)
     {
       for (ap_int<32> yy = 0; yy < 32; ++yy)
@@ -48,7 +199,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float batch_norm[32][64][32][32];
+  // cout << "loop 1" << endl;
   for (ap_int<32> i1 = 0; i1 < 32; ++i1)
   {
     for (ap_int<32> c = 0; c < 64; ++c)
@@ -62,7 +213,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float relu[32][64][32][32];
   for (ap_int<32> y = 0; y < 32; ++y)
   {
     for (ap_int<32> args0 = 0; args0 < 64; ++args0)
@@ -76,7 +226,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv1_pad[32][64][34][34];
   for (ap_int<32> indices1 = 0; indices1 < 32; ++indices1)
   {
     for (ap_int<32> not_zero1 = 0; not_zero1 < 64; ++not_zero1)
@@ -90,7 +239,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv1[32][64][32][32];
   for (ap_int<32> nn1 = 0; nn1 < 32; ++nn1)
   {
     for (ap_int<32> ff1 = 0; ff1 < 64; ++ff1)
@@ -116,7 +264,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn1[32][64][32][32];
   for (ap_int<32> i3 = 0; i3 < 32; ++i3)
   {
     for (ap_int<32> c1 = 0; c1 < 64; ++c1)
@@ -130,7 +277,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_relu[32][64][32][32];
   for (ap_int<32> y1 = 0; y1 < 32; ++y1)
   {
     for (ap_int<32> args01 = 0; args01 < 64; ++args01)
@@ -144,7 +290,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv2_pad[32][64][34][34];
+  // cout << "checkpoint 1" << endl;
   for (ap_int<32> indices2 = 0; indices2 < 32; ++indices2)
   {
     for (ap_int<32> not_zero2 = 0; not_zero2 < 64; ++not_zero2)
@@ -158,7 +304,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv2[32][64][32][32];
   for (ap_int<32> nn2 = 0; nn2 < 32; ++nn2)
   {
     for (ap_int<32> ff2 = 0; ff2 < 64; ++ff2)
@@ -184,7 +329,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn2[32][64][32][32];
   for (ap_int<32> i5 = 0; i5 < 32; ++i5)
   {
     for (ap_int<32> c2 = 0; c2 < 64; ++c2)
@@ -198,7 +342,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float compute0[32][64][32][32];
   for (ap_int<32> x = 0; x < 32; ++x)
   {
     for (ap_int<32> args02 = 0; args02 < 64; ++args02)
@@ -212,7 +355,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float bb_output_relu[32][64][32][32];
   for (ap_int<32> y2 = 0; y2 < 32; ++y2)
   {
     for (ap_int<32> args03 = 0; args03 < 64; ++args03)
@@ -226,7 +368,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv1_pad1[32][64][34][34];
   for (ap_int<32> indices3 = 0; indices3 < 32; ++indices3)
   {
     for (ap_int<32> not_zero3 = 0; not_zero3 < 64; ++not_zero3)
@@ -240,7 +381,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv11[32][64][32][32];
+  // cout << "checkpoint 2" << endl;
   for (ap_int<32> nn3 = 0; nn3 < 32; ++nn3)
   {
     for (ap_int<32> ff3 = 0; ff3 < 64; ++ff3)
@@ -266,7 +407,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn11[32][64][32][32];
   for (ap_int<32> i7 = 0; i7 < 32; ++i7)
   {
     for (ap_int<32> c3 = 0; c3 < 64; ++c3)
@@ -280,7 +420,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_relu1[32][64][32][32];
   for (ap_int<32> y3 = 0; y3 < 32; ++y3)
   {
     for (ap_int<32> args04 = 0; args04 < 64; ++args04)
@@ -294,7 +433,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv2_pad1[32][64][34][34];
   for (ap_int<32> indices4 = 0; indices4 < 32; ++indices4)
   {
     for (ap_int<32> not_zero4 = 0; not_zero4 < 64; ++not_zero4)
@@ -308,7 +446,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv21[32][64][32][32];
+  // cout << "checkpoint 3" << endl;
   for (ap_int<32> nn4 = 0; nn4 < 32; ++nn4)
   {
     for (ap_int<32> ff4 = 0; ff4 < 64; ++ff4)
@@ -334,7 +472,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn21[32][64][32][32];
   for (ap_int<32> i9 = 0; i9 < 32; ++i9)
   {
     for (ap_int<32> c4 = 0; c4 < 64; ++c4)
@@ -348,7 +485,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float compute1[32][64][32][32];
   for (ap_int<32> x1 = 0; x1 < 32; ++x1)
   {
     for (ap_int<32> args05 = 0; args05 < 64; ++args05)
@@ -362,7 +498,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float bb_output_relu1[32][64][32][32];
   for (ap_int<32> y4 = 0; y4 < 32; ++y4)
   {
     for (ap_int<32> args06 = 0; args06 < 64; ++args06)
@@ -376,7 +511,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv1_pad2[32][64][34][34];
   for (ap_int<32> indices5 = 0; indices5 < 32; ++indices5)
   {
     for (ap_int<32> not_zero5 = 0; not_zero5 < 64; ++not_zero5)
@@ -390,7 +524,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv12[32][128][16][16];
+  // cout << "checkpoint 4" << endl;
   for (ap_int<32> nn5 = 0; nn5 < 32; ++nn5)
   {
     for (ap_int<32> ff5 = 0; ff5 < 128; ++ff5)
@@ -416,7 +550,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn12[32][128][16][16];
   for (ap_int<32> i11 = 0; i11 < 32; ++i11)
   {
     for (ap_int<32> c5 = 0; c5 < 128; ++c5)
@@ -430,7 +563,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_relu2[32][128][16][16];
   for (ap_int<32> y5 = 0; y5 < 32; ++y5)
   {
     for (ap_int<32> args07 = 0; args07 < 128; ++args07)
@@ -444,7 +576,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv2_pad2[32][128][18][18];
   for (ap_int<32> indices6 = 0; indices6 < 32; ++indices6)
   {
     for (ap_int<32> not_zero6 = 0; not_zero6 < 128; ++not_zero6)
@@ -458,7 +589,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv22[32][128][16][16];
+  // cout << "checkpoint 5" << endl;
   for (ap_int<32> nn6 = 0; nn6 < 32; ++nn6)
   {
     for (ap_int<32> ff6 = 0; ff6 < 128; ++ff6)
@@ -484,7 +615,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn22[32][128][16][16];
   for (ap_int<32> i13 = 0; i13 < 32; ++i13)
   {
     for (ap_int<32> c6 = 0; c6 < 128; ++c6)
@@ -498,7 +628,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv_shortcut[32][128][16][16];
   for (ap_int<32> nn7 = 0; nn7 < 32; ++nn7)
   {
     for (ap_int<32> ff7 = 0; ff7 < 128; ++ff7)
@@ -518,7 +647,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn_shortcut[32][128][16][16];
   for (ap_int<32> i14 = 0; i14 < 32; ++i14)
   {
     for (ap_int<32> c7 = 0; c7 < 128; ++c7)
@@ -532,7 +660,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float compute2[32][128][16][16];
   for (ap_int<32> x2 = 0; x2 < 32; ++x2)
   {
     for (ap_int<32> args08 = 0; args08 < 128; ++args08)
@@ -546,7 +673,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float bb_output_relu2[32][128][16][16];
   for (ap_int<32> y6 = 0; y6 < 32; ++y6)
   {
     for (ap_int<32> args09 = 0; args09 < 128; ++args09)
@@ -560,7 +686,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv1_pad3[32][128][18][18];
   for (ap_int<32> indices7 = 0; indices7 < 32; ++indices7)
   {
     for (ap_int<32> not_zero7 = 0; not_zero7 < 128; ++not_zero7)
@@ -574,7 +699,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv13[32][128][16][16];
+  // cout << "checkpoint 6" << endl;
   for (ap_int<32> nn8 = 0; nn8 < 32; ++nn8)
   {
     for (ap_int<32> ff8 = 0; ff8 < 128; ++ff8)
@@ -600,7 +725,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn13[32][128][16][16];
   for (ap_int<32> i16 = 0; i16 < 32; ++i16)
   {
     for (ap_int<32> c8 = 0; c8 < 128; ++c8)
@@ -614,7 +738,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_relu3[32][128][16][16];
   for (ap_int<32> y7 = 0; y7 < 32; ++y7)
   {
     for (ap_int<32> args010 = 0; args010 < 128; ++args010)
@@ -628,7 +751,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv2_pad3[32][128][18][18];
   for (ap_int<32> indices8 = 0; indices8 < 32; ++indices8)
   {
     for (ap_int<32> not_zero8 = 0; not_zero8 < 128; ++not_zero8)
@@ -642,7 +764,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv23[32][128][16][16];
+  // cout << "checkpoint 7" << endl;
   for (ap_int<32> nn9 = 0; nn9 < 32; ++nn9)
   {
     for (ap_int<32> ff9 = 0; ff9 < 128; ++ff9)
@@ -668,7 +790,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn23[32][128][16][16];
   for (ap_int<32> i18 = 0; i18 < 32; ++i18)
   {
     for (ap_int<32> c9 = 0; c9 < 128; ++c9)
@@ -682,7 +803,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float compute3[32][128][16][16];
   for (ap_int<32> x3 = 0; x3 < 32; ++x3)
   {
     for (ap_int<32> args011 = 0; args011 < 128; ++args011)
@@ -696,7 +816,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float bb_output_relu3[32][128][16][16];
   for (ap_int<32> y8 = 0; y8 < 32; ++y8)
   {
     for (ap_int<32> args012 = 0; args012 < 128; ++args012)
@@ -710,7 +829,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv1_pad4[32][128][18][18];
   for (ap_int<32> indices9 = 0; indices9 < 32; ++indices9)
   {
     for (ap_int<32> not_zero9 = 0; not_zero9 < 128; ++not_zero9)
@@ -724,7 +842,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv14[32][256][8][8];
+  // cout << "checkpoint 8" << endl;
   for (ap_int<32> nn10 = 0; nn10 < 32; ++nn10)
   {
     for (ap_int<32> ff10 = 0; ff10 < 256; ++ff10)
@@ -750,7 +868,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn14[32][256][8][8];
   for (ap_int<32> i20 = 0; i20 < 32; ++i20)
   {
     for (ap_int<32> c10 = 0; c10 < 256; ++c10)
@@ -764,7 +881,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_relu4[32][256][8][8];
   for (ap_int<32> y9 = 0; y9 < 32; ++y9)
   {
     for (ap_int<32> args013 = 0; args013 < 256; ++args013)
@@ -778,7 +894,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv2_pad4[32][256][10][10];
   for (ap_int<32> indices10 = 0; indices10 < 32; ++indices10)
   {
     for (ap_int<32> not_zero10 = 0; not_zero10 < 256; ++not_zero10)
@@ -792,7 +907,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv24[32][256][8][8];
+  // cout << "checkpoint 9" << endl;
   for (ap_int<32> nn11 = 0; nn11 < 32; ++nn11)
   {
     for (ap_int<32> ff11 = 0; ff11 < 256; ++ff11)
@@ -818,7 +933,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn24[32][256][8][8];
   for (ap_int<32> i22 = 0; i22 < 32; ++i22)
   {
     for (ap_int<32> c11 = 0; c11 < 256; ++c11)
@@ -832,7 +946,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv_shortcut1[32][256][8][8];
   for (ap_int<32> nn12 = 0; nn12 < 32; ++nn12)
   {
     for (ap_int<32> ff12 = 0; ff12 < 256; ++ff12)
@@ -852,7 +965,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn_shortcut1[32][256][8][8];
   for (ap_int<32> i23 = 0; i23 < 32; ++i23)
   {
     for (ap_int<32> c12 = 0; c12 < 256; ++c12)
@@ -866,7 +978,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float compute4[32][256][8][8];
   for (ap_int<32> x4 = 0; x4 < 32; ++x4)
   {
     for (ap_int<32> args014 = 0; args014 < 256; ++args014)
@@ -880,7 +991,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float bb_output_relu4[32][256][8][8];
   for (ap_int<32> y10 = 0; y10 < 32; ++y10)
   {
     for (ap_int<32> args015 = 0; args015 < 256; ++args015)
@@ -894,7 +1004,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv1_pad5[32][256][10][10];
   for (ap_int<32> indices11 = 0; indices11 < 32; ++indices11)
   {
     for (ap_int<32> not_zero11 = 0; not_zero11 < 256; ++not_zero11)
@@ -908,7 +1017,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv15[32][256][8][8];
+  // cout << "checkpoint 10" << endl;
   for (ap_int<32> nn13 = 0; nn13 < 32; ++nn13)
   {
     for (ap_int<32> ff13 = 0; ff13 < 256; ++ff13)
@@ -934,7 +1043,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn15[32][256][8][8];
   for (ap_int<32> i25 = 0; i25 < 32; ++i25)
   {
     for (ap_int<32> c13 = 0; c13 < 256; ++c13)
@@ -948,7 +1056,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_relu5[32][256][8][8];
   for (ap_int<32> y11 = 0; y11 < 32; ++y11)
   {
     for (ap_int<32> args016 = 0; args016 < 256; ++args016)
@@ -962,7 +1069,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv2_pad5[32][256][10][10];
   for (ap_int<32> indices12 = 0; indices12 < 32; ++indices12)
   {
     for (ap_int<32> not_zero12 = 0; not_zero12 < 256; ++not_zero12)
@@ -976,7 +1082,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv25[32][256][8][8];
+  // cout << "checkpoint 11" << endl;
   for (ap_int<32> nn14 = 0; nn14 < 32; ++nn14)
   {
     for (ap_int<32> ff14 = 0; ff14 < 256; ++ff14)
@@ -1002,7 +1108,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn25[32][256][8][8];
   for (ap_int<32> i27 = 0; i27 < 32; ++i27)
   {
     for (ap_int<32> c14 = 0; c14 < 256; ++c14)
@@ -1016,7 +1121,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float compute5[32][256][8][8];
   for (ap_int<32> x5 = 0; x5 < 32; ++x5)
   {
     for (ap_int<32> args017 = 0; args017 < 256; ++args017)
@@ -1030,7 +1134,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float bb_output_relu5[32][256][8][8];
   for (ap_int<32> y12 = 0; y12 < 32; ++y12)
   {
     for (ap_int<32> args018 = 0; args018 < 256; ++args018)
@@ -1044,7 +1147,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv1_pad6[32][256][10][10];
   for (ap_int<32> indices13 = 0; indices13 < 32; ++indices13)
   {
     for (ap_int<32> not_zero13 = 0; not_zero13 < 256; ++not_zero13)
@@ -1058,7 +1160,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv16[32][512][4][4];
+  // cout << "checkpoint 12" << endl;
   for (ap_int<32> nn15 = 0; nn15 < 32; ++nn15)
   {
     for (ap_int<32> ff15 = 0; ff15 < 512; ++ff15)
@@ -1084,7 +1186,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn16[32][512][4][4];
   for (ap_int<32> i29 = 0; i29 < 32; ++i29)
   {
     for (ap_int<32> c15 = 0; c15 < 512; ++c15)
@@ -1098,7 +1199,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_relu6[32][512][4][4];
   for (ap_int<32> y13 = 0; y13 < 32; ++y13)
   {
     for (ap_int<32> args019 = 0; args019 < 512; ++args019)
@@ -1112,7 +1212,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv2_pad6[32][512][6][6];
   for (ap_int<32> indices14 = 0; indices14 < 32; ++indices14)
   {
     for (ap_int<32> not_zero14 = 0; not_zero14 < 512; ++not_zero14)
@@ -1126,7 +1225,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv26[32][512][4][4];
+  // cout << "checkpoint 13" << endl;
   for (ap_int<32> nn16 = 0; nn16 < 32; ++nn16)
   {
     for (ap_int<32> ff16 = 0; ff16 < 512; ++ff16)
@@ -1152,7 +1251,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn26[32][512][4][4];
   for (ap_int<32> i31 = 0; i31 < 32; ++i31)
   {
     for (ap_int<32> c16 = 0; c16 < 512; ++c16)
@@ -1166,7 +1264,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv_shortcut2[32][512][4][4];
   for (ap_int<32> nn17 = 0; nn17 < 32; ++nn17)
   {
     for (ap_int<32> ff17 = 0; ff17 < 512; ++ff17)
@@ -1186,7 +1283,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn_shortcut2[32][512][4][4];
   for (ap_int<32> i32 = 0; i32 < 32; ++i32)
   {
     for (ap_int<32> c17 = 0; c17 < 512; ++c17)
@@ -1200,7 +1296,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float compute6[32][512][4][4];
   for (ap_int<32> x6 = 0; x6 < 32; ++x6)
   {
     for (ap_int<32> args020 = 0; args020 < 512; ++args020)
@@ -1214,7 +1309,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float bb_output_relu6[32][512][4][4];
   for (ap_int<32> y14 = 0; y14 < 32; ++y14)
   {
     for (ap_int<32> args021 = 0; args021 < 512; ++args021)
@@ -1228,7 +1322,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv1_pad7[32][512][6][6];
   for (ap_int<32> indices15 = 0; indices15 < 32; ++indices15)
   {
     for (ap_int<32> not_zero15 = 0; not_zero15 < 512; ++not_zero15)
@@ -1242,7 +1335,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv17[32][512][4][4];
+  // cout << "checkpoint 14" << endl;
   for (ap_int<32> nn18 = 0; nn18 < 32; ++nn18)
   {
     for (ap_int<32> ff18 = 0; ff18 < 512; ++ff18)
@@ -1268,7 +1361,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn17[32][512][4][4];
   for (ap_int<32> i34 = 0; i34 < 32; ++i34)
   {
     for (ap_int<32> c18 = 0; c18 < 512; ++c18)
@@ -1282,7 +1374,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_relu7[32][512][4][4];
   for (ap_int<32> y15 = 0; y15 < 32; ++y15)
   {
     for (ap_int<32> args022 = 0; args022 < 512; ++args022)
@@ -1296,7 +1387,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv2_pad7[32][512][6][6];
   for (ap_int<32> indices16 = 0; indices16 < 32; ++indices16)
   {
     for (ap_int<32> not_zero16 = 0; not_zero16 < 512; ++not_zero16)
@@ -1310,7 +1400,7 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_conv27[32][512][4][4];
+  // cout << "checkpoint 15" << endl;
   for (ap_int<32> nn19 = 0; nn19 < 32; ++nn19)
   {
     for (ap_int<32> ff19 = 0; ff19 < 512; ++ff19)
@@ -1336,7 +1426,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float basicblock_bn27[32][512][4][4];
   for (ap_int<32> i36 = 0; i36 < 32; ++i36)
   {
     for (ap_int<32> c19 = 0; c19 < 512; ++c19)
@@ -1350,7 +1439,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float compute7[32][512][4][4];
   for (ap_int<32> x7 = 0; x7 < 32; ++x7)
   {
     for (ap_int<32> args023 = 0; args023 < 512; ++args023)
@@ -1364,7 +1452,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float bb_output_relu7[32][512][4][4];
   for (ap_int<32> y16 = 0; y16 < 32; ++y16)
   {
     for (ap_int<32> args024 = 0; args024 < 512; ++args024)
@@ -1378,7 +1465,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       }
     }
   }
-  float avg_pool2d[32][512][1][1];
   for (ap_int<32> i37 = 0; i37 < 32; ++i37)
   {
     for (ap_int<32> c20 = 0; c20 < 512; ++c20)
@@ -1395,7 +1481,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       avg_pool2d[i37][c20][0][0] = reducer0;
     }
   }
-  float compute8[32][512];
   for (ap_int<32> b = 0; b < 32; ++b)
   {
     for (ap_int<32> c21 = 0; c21 < 512; ++c21)
@@ -1403,7 +1488,6 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
       compute8[b][c21] = avg_pool2d[b][c21][0][0];
     }
   }
-  float compute9[512][100];
   for (ap_int<32> x8 = 0; x8 < 512; ++x8)
   {
     for (ap_int<32> y17 = 0; y17 < 100; ++y17)
@@ -1423,3 +1507,4 @@ void default_function(float input_image[32][3][32][32], float conv1_weight[64][3
     }
   }
 }
+ 

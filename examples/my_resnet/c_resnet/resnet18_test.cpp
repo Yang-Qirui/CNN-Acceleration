@@ -1,10 +1,10 @@
-#include <jsoncpp/json/json.h>
+#include "json.hpp"
 #include <fstream>
 #include <iostream>
 #include "resnet18.h"
 
-using namespace Json;
 using namespace std;
+using json = nlohmann::json;
 
 int layer_num = 0;
 
@@ -91,6 +91,7 @@ float bn5_bias21[512];
 float fc_weight[100][512];
 float fc_bias[100];
 
+float img_tensor[32][3][32][32];
 float linear[32][100];
 
 string get_weight_path(int i)
@@ -100,17 +101,10 @@ string get_weight_path(int i)
 
 void converter4d(float ****output)
 {
-    Reader reader;
-    Value root;
-
-    ifstream is;
-    cout << layer_num << endl;
     auto path = get_weight_path(layer_num);
-    is.open(path, ios::binary);
-    if (reader.parse(is, root))
-    {
-        Value input = root[to_string(layer_num)];
-
+    ifstream is(path);
+    json data = json::parse(is);
+        Value input = data[to_string(layer_num)];
         int batch = input.size();
         int channel = input[0].size();
         int height = input[0][0].size();
@@ -123,11 +117,6 @@ void converter4d(float ****output)
                         *((float *)output + b * channel * height * width + c * height * width + h * width + w) = input[b][c][h][w].asFloat();
                         // cout << input[b][c][h][w] << endl;
                     }
-    }
-    else
-    {
-        cout << "ERROR 4d " << layer_num << endl;
-    }
     layer_num += 1;
     root.clear();
     is.close();
@@ -135,13 +124,8 @@ void converter4d(float ****output)
 
 void converter1d(float *output)
 {
-    Reader reader;
-    Value root;
-
-    ifstream is;
-    cout << layer_num << endl;
     auto path = get_weight_path(layer_num);
-    is.open(path, ios::binary);
+    ifstream is(path);
     if (reader.parse(is, root))
     {
         Value input = root[to_string(layer_num)];
@@ -165,7 +149,6 @@ void converter2d(float **output)
 {
     Reader reader;
     Value root;
-
     ifstream is;
     cout << layer_num << endl;
     auto path = get_weight_path(layer_num);
@@ -196,7 +179,6 @@ int main()
     converter4d((float ****)conv1_weight);
     converter1d(bn1_weight);
     converter1d(bn1_bias);
-    cout << "conv1" << endl;
 
     converter4d((float ****)conv2_weight1);
     converter1d(bn2_weight1);
@@ -269,20 +251,12 @@ int main()
     int acc = 0;
     for (int i = 0; i < 312; i++)
     {
-        Reader reader;
-        Value root;
-
         ifstream is;
         string path = "../../../dataset/cifar-100-json/batch" + to_string(i) + ".json";
         is.open(path, ios::binary);
         if (reader.parse(is, root))
         {
             auto img = root[to_string(i)][0];
-            int batch = img.size();
-            int channel = img[0].size();
-            int height = img[0][0].size();
-            int width = img[0][0][0].size();
-            float img_tensor[32][3][32][32];
             for (int b = 0; b < 32; b++)
                 for (int c = 0; c < 3; c++)
                     for (int h = 0; h < 32; h++)
@@ -291,7 +265,8 @@ int main()
                             img_tensor[b][c][h][w] = img[b][c][h][w].asFloat();
                         }
             default_function(img_tensor, conv1_weight, bn1_weight, bn1_bias, conv2_weight1, bn2_weight1, bn2_bias1, conv2_weight2, bn2_weight2, bn2_bias2, conv2_weight11, bn2_weight11, bn2_bias11, conv2_weight21, bn2_weight21, bn2_bias21, conv3_weight1, bn3_weight1, bn3_bias1, conv3_weight2, bn3_weight2, bn3_bias2, conv3_shortcut_weight, bn3_shortcut_weight, bn3_shortcut_bias, conv3_weight11, bn3_weight11, bn3_bias11, conv3_weight21, bn3_weight21, bn3_bias21, conv4_weight1, bn4_weight1, bn4_bias1, conv4_weight2, bn4_weight2, bn4_bias2, conv4_shortcut_weight, bn4_shortcut_weight, bn4_shortcut_bias, conv4_weight11, bn4_weight11, bn4_bias11, conv4_weight21, bn4_weight21, bn4_bias21, conv5_weight1, bn5_weight1, bn5_bias1, conv5_weight2, bn5_weight2, bn5_bias2, conv5_shortcut_weight, bn5_shortcut_weight, bn5_shortcut_bias, conv5_weight11, bn5_weight11, bn5_bias11, conv5_weight21, bn5_weight21, bn5_bias21, fc_weight, fc_bias, linear);
-            int top1_label[32];
+            cout << "done" << endl;
+	        int top1_label[32];
             for (int i = 0; i < 32; i++)
             {
                 float _max = -1;
@@ -314,7 +289,6 @@ int main()
                     acc += 1;
                 }
             }
-            auto img_tensor = img_convert_json_list(img);
         }
         is.close();
         tot += 1;
