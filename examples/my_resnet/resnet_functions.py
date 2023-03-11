@@ -268,7 +268,7 @@ def get_test_dataloader(mean, std, batch_size=16, num_workers=2, shuffle=False):
     ])
     # cifar100_test = CIFAR100Test(path, transform=transform_test)
     cifar100_test = torchvision.datasets.CIFAR100(
-        root="../../dataset", train=False, download=True, transform=transform_test)
+        root="../../dataset/cifar100-python", train=False, download=True, transform=transform_test)
     cifar100_test_loader = DataLoader(
         cifar100_test, shuffle=shuffle, num_workers=num_workers, batch_size=batch_size)
 

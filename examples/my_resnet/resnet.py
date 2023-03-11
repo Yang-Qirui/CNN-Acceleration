@@ -135,6 +135,7 @@ def linearize_batchnorm(weight, bias, mean, var):
 
 def load_np_params18(pt_name):
     model = torch.load(pt_name, map_location=torch.device('cpu'))
+    # print(model.keys())
 
     conv1_x_weight = model['conv1.0.weight'].numpy()
     bn1_x_weight, bn1_x_bias = linearize_batchnorm(
@@ -388,5 +389,5 @@ def save_weight():
 
 
 if __name__ == "__main__":
-    # run(2)
-    save_weight()
+    run(2)
+    # save_weight()

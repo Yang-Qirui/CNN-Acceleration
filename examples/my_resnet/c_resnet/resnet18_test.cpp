@@ -101,76 +101,60 @@ string get_weight_path(int i)
 
 void converter4d(float ****output)
 {
+    cout << layer_num << endl;
     auto path = get_weight_path(layer_num);
     ifstream is(path);
     json data = json::parse(is);
-        Value input = data[to_string(layer_num)];
-        int batch = input.size();
-        int channel = input[0].size();
-        int height = input[0][0].size();
-        int width = input[0][0][0].size();
-        for (int b = 0; b < batch; b++)
-            for (int c = 0; c < channel; c++)
-                for (int h = 0; h < height; h++)
-                    for (int w = 0; w < width; w++)
-                    {
-                        *((float *)output + b * channel * height * width + c * height * width + h * width + w) = input[b][c][h][w].asFloat();
-                        // cout << input[b][c][h][w] << endl;
-                    }
+    auto input = data[to_string(layer_num)];
+    int batch = input.size();
+    int channel = input[0].size();
+    int height = input[0][0].size();
+    int width = input[0][0][0].size();
+    for (int b = 0; b < batch; b++)
+        for (int c = 0; c < channel; c++)
+            for (int h = 0; h < height; h++)
+                for (int w = 0; w < width; w++)
+                {
+                    *((float *)output + b * channel * height * width + c * height * width + h * width + w) = (float)input[b][c][h][w];
+                    // cout << input[b][c][h][w] << endl;
+                }
     layer_num += 1;
-    root.clear();
     is.close();
 }
 
 void converter1d(float *output)
 {
+    cout << layer_num << endl;
     auto path = get_weight_path(layer_num);
     ifstream is(path);
-    if (reader.parse(is, root))
+    json data = json::parse(is);
+    auto input = data[to_string(layer_num)];
+    int batch = input.size();
+    for (int b = 0; b < batch; b++)
     {
-        Value input = root[to_string(layer_num)];
-        int batch = input.size();
-        for (int b = 0; b < batch; b++)
-        {
-            output[b] = input[b].asFloat();
-            // cout << input[b] << endl;
-        }
-    }
-    else
-    {
-        cout << "ERROR 1d " << layer_num << endl;
+        output[b] = (float)input[b];
+        // cout << input[b] << endl;
     }
     layer_num += 1;
-    root.clear();
     is.close();
 }
 
 void converter2d(float **output)
 {
-    Reader reader;
-    Value root;
-    ifstream is;
     cout << layer_num << endl;
     auto path = get_weight_path(layer_num);
-    is.open(path, ios::binary);
-    if (reader.parse(is, root))
-    {
-        Value input = root[to_string(layer_num)];
-        int batch = input.size();
-        int channel = input[0].size();
-        for (int b = 0; b < batch; b++)
-            for (int c = 0; c < channel; c++)
-            {
-                *((float *)output + b * channel + c) = input[b][c].asFloat();
-                // cout << input[b][c] << endl;
-            }
-    }
-    else
-    {
-        cout << "ERROR 2d " << layer_num << endl;
-    }
+    ifstream is(path);
+    json data = json::parse(is);
+    auto input = data[to_string(layer_num)];
+    int batch = input.size();
+    int channel = input[0].size();
+    for (int b = 0; b < batch; b++)
+        for (int c = 0; c < channel; c++)
+        {
+            *((float *)output + b * channel + c) = (float)input[b][c];
+            // cout << input[b][c] << endl;
+        }
     layer_num += 1;
-    root.clear();
     is.close();
 }
 
@@ -251,43 +235,40 @@ int main()
     int acc = 0;
     for (int i = 0; i < 312; i++)
     {
-        ifstream is;
         string path = "../../../dataset/cifar-100-json/batch" + to_string(i) + ".json";
-        is.open(path, ios::binary);
-        if (reader.parse(is, root))
-        {
-            auto img = root[to_string(i)][0];
-            for (int b = 0; b < 32; b++)
-                for (int c = 0; c < 3; c++)
-                    for (int h = 0; h < 32; h++)
-                        for (int w = 0; w < 32; w++)
-                        {
-                            img_tensor[b][c][h][w] = img[b][c][h][w].asFloat();
-                        }
-            default_function(img_tensor, conv1_weight, bn1_weight, bn1_bias, conv2_weight1, bn2_weight1, bn2_bias1, conv2_weight2, bn2_weight2, bn2_bias2, conv2_weight11, bn2_weight11, bn2_bias11, conv2_weight21, bn2_weight21, bn2_bias21, conv3_weight1, bn3_weight1, bn3_bias1, conv3_weight2, bn3_weight2, bn3_bias2, conv3_shortcut_weight, bn3_shortcut_weight, bn3_shortcut_bias, conv3_weight11, bn3_weight11, bn3_bias11, conv3_weight21, bn3_weight21, bn3_bias21, conv4_weight1, bn4_weight1, bn4_bias1, conv4_weight2, bn4_weight2, bn4_bias2, conv4_shortcut_weight, bn4_shortcut_weight, bn4_shortcut_bias, conv4_weight11, bn4_weight11, bn4_bias11, conv4_weight21, bn4_weight21, bn4_bias21, conv5_weight1, bn5_weight1, bn5_bias1, conv5_weight2, bn5_weight2, bn5_bias2, conv5_shortcut_weight, bn5_shortcut_weight, bn5_shortcut_bias, conv5_weight11, bn5_weight11, bn5_bias11, conv5_weight21, bn5_weight21, bn5_bias21, fc_weight, fc_bias, linear);
-            cout << "done" << endl;
-	        int top1_label[32];
-            for (int i = 0; i < 32; i++)
-            {
-                float _max = -1;
-                for (int j = 0; j < 100; j++)
-                {
-                    if (linear[i][j] > _max)
+        ifstream is(path);
+        json data = json::parse(is);
+        auto img = data[to_string(i)][0];
+        for (int b = 0; b < 32; b++)
+            for (int c = 0; c < 3; c++)
+                for (int h = 0; h < 32; h++)
+                    for (int w = 0; w < 32; w++)
                     {
-                        top1_label[i] = j;
-                        _max = linear[i][j];
+                        img_tensor[b][c][h][w] = (float)img[b][c][h][w];
                     }
+        default_function(img_tensor, conv1_weight, bn1_weight, bn1_bias, conv2_weight1, bn2_weight1, bn2_bias1, conv2_weight2, bn2_weight2, bn2_bias2, conv2_weight11, bn2_weight11, bn2_bias11, conv2_weight21, bn2_weight21, bn2_bias21, conv3_weight1, bn3_weight1, bn3_bias1, conv3_weight2, bn3_weight2, bn3_bias2, conv3_shortcut_weight, bn3_shortcut_weight, bn3_shortcut_bias, conv3_weight11, bn3_weight11, bn3_bias11, conv3_weight21, bn3_weight21, bn3_bias21, conv4_weight1, bn4_weight1, bn4_bias1, conv4_weight2, bn4_weight2, bn4_bias2, conv4_shortcut_weight, bn4_shortcut_weight, bn4_shortcut_bias, conv4_weight11, bn4_weight11, bn4_bias11, conv4_weight21, bn4_weight21, bn4_bias21, conv5_weight1, bn5_weight1, bn5_bias1, conv5_weight2, bn5_weight2, bn5_bias2, conv5_shortcut_weight, bn5_shortcut_weight, bn5_shortcut_bias, conv5_weight11, bn5_weight11, bn5_bias11, conv5_weight21, bn5_weight21, bn5_bias21, fc_weight, fc_bias, linear);
+        cout << "done" << endl;
+        int top1_label[32];
+        for (int i = 0; i < 32; i++)
+        {
+            float _max = -1;
+            for (int j = 0; j < 100; j++)
+            {
+                if (linear[i][j] > _max)
+                {
+                    top1_label[i] = j;
+                    _max = linear[i][j];
                 }
             }
-            auto label_tensor = root[to_string(i)][1];
+        }
+        auto label_tensor = data[to_string(i)][1];
 
-            for (int i = 0; i < 32; i++)
+        for (int i = 0; i < 32; i++)
+        {
+            cout << label_tensor[i] << " " << top1_label[i] << endl;
+            if (label_tensor[i] == top1_label[i])
             {
-                cout << label_tensor[i] << " " << top1_label[i] << endl;
-                if (label_tensor[i] == top1_label[i])
-                {
-                    acc += 1;
-                }
+                acc += 1;
             }
         }
         is.close();
