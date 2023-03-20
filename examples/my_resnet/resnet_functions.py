@@ -3,7 +3,6 @@
 ###############################################################################
 
 import heterocl as hcl
-import heterocl.tvm as tvm
 from collections import OrderedDict
 import numpy as np
 from torch.utils.data import DataLoader
@@ -21,7 +20,8 @@ CIFAR100_TEST_STD = (0.2682515741720801,
 
 
 def simplify(expr):
-    return tvm.ir_pass.Simplify(expr) if isinstance(expr, tvm.expr.Expr) else expr
+    # return tvm.ir_pass.Simplify(expr) if isinstance(expr, tvm.expr.Expr) else expr
+    return expr
 
 
 def get_pad_tuple(padding, kernel):
@@ -42,12 +42,14 @@ def pad(data, pad_before, pad_after=None, pad_value=0.0, name="pad"):
         raise ValueError(
             "Input dimension and pad_after dismatch : %d vs %d" %
             (n, len(pad_after)))
-    out_shape = tuple(
-        tvm.ir_pass.Simplify(
-            (data.shape[i] + tvm.const(pad_before[i] + pad_after[i]))
-        ) for i in range(n))
-    pad_value = pad_value if isinstance(
-        pad_value, tvm.expr.Expr) else tvm.const(pad_value, data.dtype)
+    # out_shape = tuple(
+    #     tvm.ir_pass.Simplify(
+    #         (data.shape[i] + tvm.const(pad_before[i] + pad_after[i]))
+    #     ) for i in range(n))
+    out_shape = tuple((data.shape[i] + pad_before[i] + pad_after[i]) for i in range(n))
+    # pad_value = pad_value if isinstance(
+    #     pad_value, tvm.expr.Expr) else tvm.const(pad_value, data.dtype)
+    pad_value = pad_value
 
     def _pad(*indices):
         not_zero = []
@@ -60,8 +62,10 @@ def pad(data, pad_before, pad_after=None, pad_value=0.0, name="pad"):
                 not_zero.append(indices[i] >= pad_before[i])
                 not_zero.append(indices[i] < data.shape[i] + pad_before[i])
         if not_zero:
-            not_zero = tvm.all(*not_zero)
-            return tvm.select(not_zero, data[tuple(index_tuple)], pad_value)
+            # not_zero = tvm.all(*not_zero)
+            # return tvm.select(not_zero, data[tuple(index_tuple)], pad_value)
+            not_zero = not_zero
+            return data[tuple(index_tuple)] if not_zero else pad_value
         return data[tuple(index_tuple)]
 
     # Use this for CPU backend
@@ -102,17 +106,7 @@ def conv2d(Input, Filter, name="conv2d", stride=[1, 1], padding=[[1, 1], [1, 1]]
             Filter[ff, rc, ry, rx],
             axis=[rc, ry, rx],
             dtype=out_dtype),
-        name=name,
-        attrs=OrderedDict([
-            ('p', kernel_h),
-            ('q', kernel_w),
-            ('in_num', in_channel),
-            ('out_num', out_channel),
-            ('out_img_w', out_width),
-            ('out_img_h', out_height),
-            ('cin_dtype', tvm.make.StringImm(Input.dtype)),
-            ('filter_dtype', tvm.make.StringImm(Filter.dtype)),
-            ('app_name', tvm.make.StringImm('cnn'))]))
+        name=name)
 
 
 def relu(data, name='relu'):
@@ -130,30 +124,26 @@ def relu(data, name='relu'):
 
 
 def linear(data, weight, bias, name='linear'):
-    batch, in_feature = data.shape
-    out_feature, w = weight.shape  # h=100, w=512
-    weight_T = hcl.compute((w, out_feature), lambda x, y: weight[y, x])
-    # with hcl.for_(0, h) as i:
-    #     with hcl.for_(0, w) as j:
-    #         weight_T[j, i] = weight[i, j]
-    # kernel_h, out_feature = weight_T.shape
-    out = hcl.placeholder((batch, out_feature), name=name)
-    with hcl.for_(0, batch) as i:
-        with hcl.for_(0, out_feature) as k:
-            with hcl.for_(0, w) as j:
-                out[i, k] = data[i, j] * weight_T[j, k] + out[i, k]
-            out[i, k] = out[i, k] + bias[k]
-
-    return out
     # batch, in_feature = data.shape
-    # h, w = weight.shape
-    # weight_transpose = hcl.compute(
-    #     (weight.shape[1], weight.shape[0]), lambda x, y: weight[y, x])
-    # _, out_feature = w, h
-    # din_feature = hcl.reduce_axis(0, in_feature)
-    # return hcl.compute((batch, out_feature), lambda x, y: hcl.sum(
-    #     data[x, din_feature] * weight_transpose[din_feature, x], axis=[din_feature]
-    # ) + bias[y], name=name, dtype=data.dtype)
+    # out_feature, w = weight.shape  # h=100, w=512
+    # weight_T = hcl.compute((w, out_feature), lambda x, y: weight[y, x])
+    # out = hcl.placeholder((batch, out_feature), name=name)
+    # with hcl.for_(0, batch) as i:
+    #     with hcl.for_(0, out_feature) as k:
+    #         with hcl.for_(0, w) as j:
+    #             out[i, k] = data[i, j] * weight_T[j, k] + out[i, k]
+    #         out[i, k] = out[i, k] + bias[k]
+    # return out
+
+    batch, in_feature = data.shape
+    h, w = weight.shape
+    weight_transpose = hcl.compute(
+        (weight.shape[1], weight.shape[0]), lambda x, y: weight[y, x])
+    _, out_feature = w, h
+    din_feature = hcl.reduce_axis(0, in_feature)
+    return hcl.compute((batch, out_feature), lambda x, y:hcl.sum(
+        data[x, din_feature] * weight_transpose[din_feature, x], axis=[din_feature]
+    ) + bias[y], name=name, dtype=data.dtype)
 
 
 def avgpool2d(data, stride=1, name='avg_pool2d'):
@@ -186,7 +176,8 @@ def maxpool2d(data, pool_size=2, stride=2, padding=0, name='max_pool2d'):
     pooling = pool_size
     max = hcl.reducer(
         0,
-        lambda x, y: tvm.make.Max(x, y),
+        # lambda x, y: tvm.make.Max(x, y),
+        lambda x,y: x if x > y else y,
         data.dtype)
     pooling_h = pooling_w = pooling
     stride_h = stride_w = stride
@@ -211,16 +202,7 @@ def maxpool2d(data, pool_size=2, stride=2, padding=0, name='max_pool2d'):
                                     dheight, w *
                                     stride_w +
                                     dwidth], axis=[dheight, dwidth]),
-        name=name, dtype=data.dtype,
-        attrs=OrderedDict([
-            ('out_img_w', out_width),
-            ('out_img_h', out_height),
-            ('in_num', channel),
-            ('kernel_h', pooling),
-            ('kernel_w', pooling),
-            ('stride_h', stride),
-            ('stride_w', stride),
-            ('app_name', tvm.make.StringImm('max_pool'))]))
+        name=name, dtype=data.dtype)
 
 # batch normalization
 

@@ -2,6 +2,4 @@ dataset/cifar100-python/
 weights/
 *.log
 dataset/
-examples/my_resnet/c_resnet/prj_cosim
-examples/my_resnet/c_resnet/prj_cosim_unroll
-examples/my_resnet/c_resnet/prj_csim
+examples/my_resnet/c_resnet
