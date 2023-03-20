@@ -219,7 +219,7 @@ def load_np_params18(pt_name):
     ]
 
 
-def run(batch_size):
+def run(batch_size, target='llvm'):
     [
         conv1_x_weight, bn1_x_weight, bn1_x_bias,
         conv2_0_conv1, conv2_0_bn_w1, conv2_0_bn_b1, conv2_0_conv2, conv2_0_bn_w2, conv2_0_bn_b2,
@@ -312,7 +312,11 @@ def run(batch_size):
     # hcl_conv5_out = hcl.asarray(np.zeros((batch_size, 512, 4, 4)))
     # hcl_avg_out = hcl.asarray(np.zeros((batch_size, 512)))
 
-    f = create_resnet18(batch_size, 'llvm')
+    f = create_resnet18(batch_size, target)
+    if target == 'vhls':
+        with open("./c_resnet/resnet18.cpp", 'w') as file:
+            file.write(f)
+        return
 
     cifar100_test_loader = get_test_dataloader(
         CIFAR100_TEST_MEAN, CIFAR100_TEST_STD, num_workers=2, batch_size=batch_size)
@@ -376,10 +380,10 @@ def run(batch_size):
     print("Top 5 err: ", 1 - correct_5 / len(cifar100_test_loader.dataset))
 
 
-def save_weight():
+def save_weight(batchsize):
     weight_list = load_np_params18(
-        "../../weights/resnet18/resnet18-199-best.pth")
-    os.mkdir("../../weights/resnet18-weights-json")
+        "../../weights/resnet18/resnet18-50-regular.pth")
+    os.mkdir(f"../../weights/resnet18-weights-json-batchsize{batchsize}")
     for i, weight in enumerate(weight_list):
         data = {}
         data[str(i)] = weight.tolist()
@@ -389,5 +393,5 @@ def save_weight():
 
 
 if __name__ == "__main__":
-    run(2)
+    run(2, 'vhls')
     # save_weight()
