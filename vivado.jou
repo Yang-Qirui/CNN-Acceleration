@@ -1,0 +1,13 @@
+#-----------------------------------------------------------
+# Vivado v2021.2 (64-bit)
+# SW Build 3367213 on Tue Oct 19 02:47:39 MDT 2021
+# IP Build 3369179 on Thu Oct 21 08:25:16 MDT 2021
+# Start of session at: Sun Mar 12 01:27:50 2023
+# Process ID: 28868
+# Current directory: /home1/yangqr/CNN-Acceleration
+# Command line: vivado
+# Log file: /home1/yangqr/CNN-Acceleration/vivado.log
+# Journal file: /home1/yangqr/CNN-Acceleration/vivado.jou
+# Running On: ubuntu, OS: Linux, CPU Frequency: 1559.578 MHz, CPU Physical cores: 16, Host memory: 540948 MB
+#-----------------------------------------------------------
+start_gui

@@ -1,6 +1,9 @@
 #include "json.hpp"
 #include <fstream>
 #include <iostream>
+
+#include <unistd.h>
+
 #include "resnet18.h"
 
 using namespace std;
@@ -94,15 +97,26 @@ float fc_bias[100];
 float img_tensor[32][3][32][32];
 float linear[32][100];
 
+string get_cwd() {
+    char cwd[256];
+    if (getcwd(cwd, sizeof(cwd)) != NULL) {
+        return cwd;
+    } else {
+        return 0;
+    }
+}
+
 string get_weight_path(int i)
 {
-    return "../../../weights/resnet18-weights-json/layer" + to_string(i) + ".json";
+    auto path = "/home1/yangqr/CNN-Acceleration/weights/resnet18-weights-json/layer" + to_string(i) + ".json";
+    return path;
 }
 
 void converter4d(float ****output)
 {
     cout << layer_num << endl;
     auto path = get_weight_path(layer_num);
+
     ifstream is(path);
     json data = json::parse(is);
     auto input = data[to_string(layer_num)];
@@ -158,8 +172,10 @@ void converter2d(float **output)
     is.close();
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    cout << get_cwd() << endl;
+
     converter4d((float ****)conv1_weight);
     converter1d(bn1_weight);
     converter1d(bn1_bias);
@@ -233,9 +249,9 @@ int main()
 
     int tot = 0;
     int acc = 0;
-    for (int i = 0; i < 312; i++)
+    for (int i = 0; i < 1; i++)
     {
-        string path = "../../../dataset/cifar-100-json/batch" + to_string(i) + ".json";
+        string path = "/home1/yangqr/CNN-Acceleration/dataset/cifar-100-json/batch" + to_string(i) + ".json";
         ifstream is(path);
         json data = json::parse(is);
         auto img = data[to_string(i)][0];
