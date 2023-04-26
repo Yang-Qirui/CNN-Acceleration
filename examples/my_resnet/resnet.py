@@ -7,6 +7,10 @@ import os
 import json
 import argparse
 import inspect
+import optimize
+
+PROJECT_NAME = "prj_mlir"
+TOP_FUNC_NAME = "top"
 
 hcl.init(hcl.Fixed(10,6))
 
@@ -199,7 +203,7 @@ def create_resnet18(batch_size, target, image_size=[32, 32], resnet_scale=18, in
 
     return hcl.build(s, target=target)
 
-def nn_create_resnet18(batch_size, target, image_size=[32, 32], resnet_scale=18, in_channel=64, kernel_size=3, num_classes=100):
+def nn_create_resnet18(batch_size, target, args,image_size=[32, 32], resnet_scale=18, in_channel=64, kernel_size=3, num_classes=100):
     '''batch, channel, height, width'''
     image_h, image_w = image_size
 
@@ -247,67 +251,52 @@ def nn_create_resnet18(batch_size, target, image_size=[32, 32], resnet_scale=18,
     fc_weight = hcl.placeholder((num_classes, out_channel), "fc_weight")
     fc_bias = hcl.placeholder((num_classes,), "fc_bias")
 
-
-    sm = hcl.create_scheme(
-        [input_image,
+    resnet_inputs = [input_image,
          conv1_x_weight, *bn1,
          *conv2_0_vars,*conv2_1_vars,
          *conv3_0_vars,*conv3_1_vars,
          *conv4_0_vars,*conv4_1_vars,
          *conv5_0_vars,*conv5_1_vars,
          fc_weight, fc_bias,
-         ],
+         ]
+
+    sm = hcl.create_scheme(
+        resnet_inputs,
         nn_resnet18
     )
     
-    # tot_type = hcl.Fixed(10,6)
-    # c1 = getattr(resnet18,"conv1_x_0_conv1")
-    # sm.quantize(c1,tot_type)
-    # sm.quantize(resnet18.conv1_x_0_bn1,tot_type)
-    # sm.quantize(resnet18.conv1_x_0_relu,tot_type)
-    # for i in range(2, 6):
-    #         for j in [0,1]:
-    #             for k in [1,2]:
-
+    
     ################################################################
     # optimization
     ################################################################
+   
+
     s = hcl.create_schedule_from_scheme(sm)
-    # Data reuse
-    # conv_pad = getattr(resnet18, "conv1_x_0_conv1_pad")
-    # conv = getattr(resnet18, "conv1_x_0_conv1")
-    # print(type(conv.axis[2]))
-    # print(type(conv.axis[2].dom.min))
-    # print(inspect.getmembers(conv.axis[2].dom.min))
-    # LB = s.reuse_at(conv_pad._op, s[conv], conv.axis[2], f"conv1_x_0_conv1_line_buffer")
-    # WB = s.reuse_at(LB, s[conv], conv.axis[3], f"conv1_x_0_conv1_window_buffer")
-    # for i in range(2, 6):
-    #     for j in [0,1]:
-    #         for k in [1,2]:
-    #             conv_pad = getattr(resnet18, f'conv{i}_x_{j}_conv{k}_pad')
-    #             conv = getattr(resnet18, f'conv{i}_x_{j}_conv{k}')
-    #             # s[conv_pad].compute_at(s[conv],conv.axis[3])
-    #             if j == 0 and i > 2:
-    #                 # BUG: cannot generate axis with stride > 1
-    #                 pass
-    #                 # new_axis_0 = hcl.reduce_axis(conv.axis[2].dom.min.value,conv.axis[2].dom.extent.value * 2)
-    #                 # new_axis_1 = hcl.reduce_axis(conv.axis[3].dom.min.value,conv.axis[3].dom.extent.value * 2)
-    #                 # LB = s.reuse_at(conv_pad._op, s[conv], new_axis_0, f"conv{i}_x_{j}_conv{k}_line_buffer")
-    #                 # WB = s.reuse_at(LB, s[conv], new_axis_1, f"conv{i}_x_{j}_conv{k}_window_buffer")
-    #             else:
-    #                 print(f"conv{i}_x_{j}_conv{k}")
-    #                 LB = s.reuse_at(conv_pad._op, s[conv], conv.axis[2], f"conv{i}_x_{j}_conv{k}_line_buffer")
-    #                 WB = s.reuse_at(LB, s[conv], conv.axis[3], f"conv{i}_x_{j}_conv{k}_window_buffer")
 
     # BatchNorm + ReLU
-    # for i in range(2, 6):
-    #     for j in [0,1]:
-    #         for k in [1,2]:
-    #             pass
+    ignore_ops = []
+    if args.loop_aggr:
+        aggr_ops = optimize.loop_aggregation(s, nn_resnet18)
+        ignore_ops += aggr_ops
+
+    # LB and WB for conv layer
+    if args.buffer:
+        conv_layers = optimize.conv_buffer(s, nn_resnet18)
 
     # Fifo
-    # s.to(resnet18.conv1_x_0_conv1,s[resnet18.conv1_x_0_bn1],depth=128)
-    # s.to(resnet18.conv1_x_0_bn1,s[resnet18.conv1_x_0_relu],depth=128)
+    if args.fifo:
+        optimize.fifo(s, nn_resnet18, ignore_ops)
+
+    # Function outline
+    if args.outline:
+        optimize.function_outline(s, nn_resnet18, ignore_ops)
+
+    # Array partition
+    if args.partition:
+        optimize.array_partition(s, resnet_inputs)
+
+    if args.pipeline:
+        optimize.pipeline(s, nn_resnet18, conv_layers)
 
     return hcl.build(s, target=target)
 
@@ -709,105 +698,13 @@ def run(batch_size, save_path,target='llvm'):
     print("Top 5 err: ", 1 - correct_5 / len(cifar100_test_loader.dataset))
 
 def nn_run(batch_size, save_path,target='llvm'):
-    # [
-    #     conv1_x_weight, bn1_x_gamma,bn1_x_beta,bn1_x_mean,bn1_x_var,
-    #     conv2_0_conv1, bn20_x_1_gamma, bn20_x_1_beta, bn20_x_1_mean, bn20_x_1_var, conv2_0_conv2, bn20_x_2_gamma, bn20_x_2_beta, bn20_x_2_mean, bn20_x_2_var,
-    #     conv2_1_conv1, bn21_x_1_gamma, bn21_x_1_beta, bn21_x_1_mean, bn21_x_1_var, conv2_1_conv2, bn21_x_2_gamma, bn21_x_2_beta, bn21_x_2_mean, bn21_x_2_var,
-    #     conv3_0_conv1, bn30_x_1_gamma, bn30_x_1_beta, bn30_x_1_mean, bn30_x_1_var, conv3_0_conv2, bn30_x_2_gamma, bn30_x_2_beta, bn30_x_2_mean, bn30_x_2_var, conv3_0_convs, bn30_x_s_gamma,bn30_x_s_beta,bn30_x_s_mean,bn30_x_s_var,
-    #     conv3_1_conv1, bn31_x_1_gamma, bn31_x_1_beta, bn31_x_1_mean, bn31_x_1_var, conv3_1_conv2, bn31_x_2_gamma, bn31_x_2_beta, bn31_x_2_mean, bn31_x_2_var,
-    #     conv4_0_conv1, bn40_x_1_gamma, bn40_x_1_beta, bn40_x_1_mean, bn40_x_1_var, conv4_0_conv2, bn40_x_2_gamma, bn40_x_2_beta, bn40_x_2_mean, bn40_x_2_var, conv4_0_convs, bn40_x_s_gamma,bn40_x_s_beta,bn40_x_s_mean,bn40_x_s_var,
-    #     conv4_1_conv1, bn41_x_1_gamma, bn41_x_1_beta, bn41_x_1_mean, bn41_x_1_var, conv4_1_conv2, bn41_x_2_gamma, bn41_x_2_beta, bn41_x_2_mean, bn41_x_2_var,
-    #     conv5_0_conv1, bn50_x_1_gamma, bn50_x_1_beta, bn50_x_1_mean, bn50_x_1_var, conv5_0_conv2, bn50_x_2_gamma, bn50_x_2_beta, bn50_x_2_mean, bn50_x_2_var, conv5_0_convs, bn50_x_s_gamma,bn50_x_s_beta,bn50_x_s_mean,bn50_x_s_var,
-    #     conv5_1_conv1, bn51_x_1_gamma, bn51_x_1_beta, bn51_x_1_mean, bn51_x_1_var, conv5_1_conv2, bn51_x_2_gamma, bn51_x_2_beta, bn51_x_2_mean, bn51_x_2_var,
-    #     fc_weight, fc_bias
-    # ] = nn_load_np_params18("../../weights/resnet18/resnet18-199-best.pth")
     variables = nn_load_np_params18("../../weights/resnet18/resnet18-199-best.pth")
     hcl_variables = []
 
     for _, var in enumerate(variables):
         hcl_variables.append(hcl.asarray(var.astype(np.float32)))
 
-
-    # hcl_conv1_x_weight = hcl.asarray(conv1_x_weight.astype(np.float32))
-    # hcl_bn1_x_weight = hcl.asarray(bn1_x_weight.astype(np.float32))
-    # hcl_bn1_x_bias = hcl.asarray(bn1_x_bias.astype(np.float32))
-
-    # hcl_conv2_0_conv1 = hcl.asarray(conv2_0_conv1.astype(np.float32))
-    # hcl_conv2_0_bn_w1 = hcl.asarray(conv2_0_bn_w1.astype(np.float32))
-    # hcl_conv2_0_bn_b1 = hcl.asarray(conv2_0_bn_b1.astype(np.float32))
-    # hcl_conv2_0_conv2 = hcl.asarray(conv2_0_conv2.astype(np.float32))
-    # hcl_conv2_0_bn_w2 = hcl.asarray(conv2_0_bn_w2.astype(np.float32))
-    # hcl_conv2_0_bn_b2 = hcl.asarray(conv2_0_bn_b2.astype(np.float32))
- 
-    # hcl_conv2_1_conv1 = hcl.asarray(conv2_1_conv1.astype(np.float32))
-    # hcl_conv2_1_bn_w1 = hcl.asarray(conv2_1_bn_w1.astype(np.float32))
-    # hcl_conv2_1_bn_b1 = hcl.asarray(conv2_1_bn_b1.astype(np.float32))
-    # hcl_conv2_1_conv2 = hcl.asarray(conv2_1_conv2.astype(np.float32))
-    # hcl_conv2_1_bn_w2 = hcl.asarray(conv2_1_bn_w2.astype(np.float32))
-    # hcl_conv2_1_bn_b2 = hcl.asarray(conv2_1_bn_b2.astype(np.float32))
- 
-    # hcl_conv3_0_conv1 = hcl.asarray(conv3_0_conv1.astype(np.float32))
-    # hcl_conv3_0_bn_w1 = hcl.asarray(conv3_0_bn_w1.astype(np.float32))
-    # hcl_conv3_0_bn_b1 = hcl.asarray(conv3_0_bn_b1.astype(np.float32))
-    # hcl_conv3_0_conv2 = hcl.asarray(conv3_0_conv2.astype(np.float32))
-    # hcl_conv3_0_bn_w2 = hcl.asarray(conv3_0_bn_w2.astype(np.float32))
-    # hcl_conv3_0_bn_b2 = hcl.asarray(conv3_0_bn_b2.astype(np.float32))
-    # hcl_conv3_0_convs = hcl.asarray(conv3_0_convs.astype(np.float32))
-    # hcl_conv3_0_bn_ws = hcl.asarray(conv3_0_bn_ws.astype(np.float32))
-    # hcl_conv3_0_bn_bs = hcl.asarray(conv3_0_bn_bs.astype(np.float32))
- 
-    # hcl_conv3_1_conv1 = hcl.asarray(conv3_1_conv1.astype(np.float32))
-    # hcl_conv3_1_bn_w1 = hcl.asarray(conv3_1_bn_w1.astype(np.float32))
-    # hcl_conv3_1_bn_b1 = hcl.asarray(conv3_1_bn_b1.astype(np.float32))
-    # hcl_conv3_1_conv2 = hcl.asarray(conv3_1_conv2.astype(np.float32))
-    # hcl_conv3_1_bn_w2 = hcl.asarray(conv3_1_bn_w2.astype(np.float32))
-    # hcl_conv3_1_bn_b2 = hcl.asarray(conv3_1_bn_b2.astype(np.float32))
-
-    # hcl_conv4_0_conv1 = hcl.asarray(conv4_0_conv1.astype(np.float32))
-    # hcl_conv4_0_bn_w1 = hcl.asarray(conv4_0_bn_w1.astype(np.float32))
-    # hcl_conv4_0_bn_b1 = hcl.asarray(conv4_0_bn_b1.astype(np.float32))
-    # hcl_conv4_0_conv2 = hcl.asarray(conv4_0_conv2.astype(np.float32))
-    # hcl_conv4_0_bn_w2 = hcl.asarray(conv4_0_bn_w2.astype(np.float32))
-    # hcl_conv4_0_bn_b2 = hcl.asarray(conv4_0_bn_b2.astype(np.float32))
-    # hcl_conv4_0_convs = hcl.asarray(conv4_0_convs.astype(np.float32))
-    # hcl_conv4_0_bn_ws = hcl.asarray(conv4_0_bn_ws.astype(np.float32))
-    # hcl_conv4_0_bn_bs = hcl.asarray(conv4_0_bn_bs.astype(np.float32))
- 
-    # hcl_conv4_1_conv1 = hcl.asarray(conv4_1_conv1.astype(np.float32))
-    # hcl_conv4_1_bn_w1 = hcl.asarray(conv4_1_bn_w1.astype(np.float32))
-    # hcl_conv4_1_bn_b1 = hcl.asarray(conv4_1_bn_b1.astype(np.float32))
-    # hcl_conv4_1_conv2 = hcl.asarray(conv4_1_conv2.astype(np.float32))
-    # hcl_conv4_1_bn_w2 = hcl.asarray(conv4_1_bn_w2.astype(np.float32))
-    # hcl_conv4_1_bn_b2 = hcl.asarray(conv4_1_bn_b2.astype(np.float32))
- 
-    # hcl_conv5_0_conv1 = hcl.asarray(conv5_0_conv1.astype(np.float32))
-    # hcl_conv5_0_bn_w1 = hcl.asarray(conv5_0_bn_w1.astype(np.float32))
-    # hcl_conv5_0_bn_b1 = hcl.asarray(conv5_0_bn_b1.astype(np.float32))
-    # hcl_conv5_0_conv2 = hcl.asarray(conv5_0_conv2.astype(np.float32))
-    # hcl_conv5_0_bn_w2 = hcl.asarray(conv5_0_bn_w2.astype(np.float32))
-    # hcl_conv5_0_bn_b2 = hcl.asarray(conv5_0_bn_b2.astype(np.float32))
-    # hcl_conv5_0_convs = hcl.asarray(conv5_0_convs.astype(np.float32))
-    # hcl_conv5_0_bn_ws = hcl.asarray(conv5_0_bn_ws.astype(np.float32))
-    # hcl_conv5_0_bn_bs = hcl.asarray(conv5_0_bn_bs.astype(np.float32))
-
-    # hcl_conv5_1_conv1 = hcl.asarray(conv5_1_conv1.astype(np.float32))
-    # hcl_conv5_1_bn_w1 = hcl.asarray(conv5_1_bn_w1.astype(np.float32))
-    # hcl_conv5_1_bn_b1 = hcl.asarray(conv5_1_bn_b1.astype(np.float32))
-    # hcl_conv5_1_conv2 = hcl.asarray(conv5_1_conv2.astype(np.float32))
-    # hcl_conv5_1_bn_w2 = hcl.asarray(conv5_1_bn_w2.astype(np.float32))
-    # hcl_conv5_1_bn_b2 = hcl.asarray(conv5_1_bn_b2.astype(np.float32))
-
-    # hcl_fc_weight = hcl.asarray(fc_weight.astype(np.float32))
-    # hcl_fc_bias = hcl.asarray(fc_bias.astype(np.float32))
-
-    # hcl_conv1_out = hcl.asarray(np.zeros((batch_size, 64, 32, 32)))
-    # hcl_conv2_out = hcl.asarray(np.zeros((batch_size, 64, 32, 32)))
-    # hcl_conv3_out = hcl.asarray(np.zeros((batch_size, 128, 16, 16)))
-    # hcl_conv4_out = hcl.asarray(np.zeros((batch_size, 256, 8, 8)))
-    # hcl_conv5_out = hcl.asarray(np.zeros((batch_size, 512, 4, 4)))
-    # hcl_avg_out = hcl.asarray(np.zeros((batch_size, 512)))
-
-    f = nn_create_resnet18(batch_size, target)
+    f = nn_create_resnet18(batch_size, target, args)
     if target == 'vhls':
         with open(f"./c_resnet/{save_path}", 'w') as file:
             file.write(f)
@@ -826,37 +723,10 @@ def nn_run(batch_size, save_path,target='llvm'):
                 np.zeros((batch_size, 100)).astype(np.float32))
 
             print(f'Iter {n_iter} run started')
-            # f(
-            #     hcl_input,
-            #     hcl_conv1_x_weight, hcl_bn1_x_weight, hcl_bn1_x_bias,
-            #     hcl_conv2_0_conv1, hcl_conv2_0_bn_w1, hcl_conv2_0_bn_b1, hcl_conv2_0_conv2, hcl_conv2_0_bn_w2, hcl_conv2_0_bn_b2,
-            #     hcl_conv2_1_conv1, hcl_conv2_1_bn_w1, hcl_conv2_1_bn_b1, hcl_conv2_1_conv2, hcl_conv2_1_bn_w2, hcl_conv2_1_bn_b2,
-            #     hcl_conv3_0_conv1, hcl_conv3_0_bn_w1, hcl_conv3_0_bn_b1, hcl_conv3_0_conv2, hcl_conv3_0_bn_w2, hcl_conv3_0_bn_b2, hcl_conv3_0_convs, hcl_conv3_0_bn_ws, hcl_conv3_0_bn_bs,
-            #     hcl_conv3_1_conv1, hcl_conv3_1_bn_w1, hcl_conv3_1_bn_b1, hcl_conv3_1_conv2, hcl_conv3_1_bn_w2, hcl_conv3_1_bn_b2,
-            #     hcl_conv4_0_conv1, hcl_conv4_0_bn_w1, hcl_conv4_0_bn_b1, hcl_conv4_0_conv2, hcl_conv4_0_bn_w2, hcl_conv4_0_bn_b2, hcl_conv4_0_convs, hcl_conv4_0_bn_ws, hcl_conv4_0_bn_bs,
-            #     hcl_conv4_1_conv1, hcl_conv4_1_bn_w1, hcl_conv4_1_bn_b1, hcl_conv4_1_conv2, hcl_conv4_1_bn_w2, hcl_conv4_1_bn_b2,
-            #     hcl_conv5_0_conv1, hcl_conv5_0_bn_w1, hcl_conv5_0_bn_b1, hcl_conv5_0_conv2, hcl_conv5_0_bn_w2, hcl_conv5_0_bn_b2, hcl_conv5_0_convs, hcl_conv5_0_bn_ws, hcl_conv5_0_bn_bs,
-            #     hcl_conv5_1_conv1, hcl_conv5_1_bn_w1, hcl_conv5_1_bn_b1, hcl_conv5_1_conv2, hcl_conv5_1_bn_w2, hcl_conv5_1_bn_b2,
-            #     hcl_fc_weight, hcl_fc_bias,
-            #     hcl_out
-            # )
             f(hcl_input,*hcl_variables,hcl_out)
 
             np_out = hcl_out.asnumpy()
             tensor_out = torch.tensor(np_out)
-
-            # np_conv1 = hcl_conv1_out.asnumpy()
-            # tensor_conv1_out = torch.tensor(np_conv1, dtype=torch.float64)
-            # np_conv2 = hcl_conv2_out.asnumpy()
-            # tensor_conv2_out = torch.tensor(np_conv2, dtype=torch.float64)
-            # np_conv3 = hcl_conv3_out.asnumpy()
-            # tensor_conv3_out = torch.tensor(np_conv3, dtype=torch.float64)
-            # np_conv4 = hcl_conv4_out.asnumpy()
-            # tensor_conv4_out = torch.tensor(np_conv4, dtype=torch.float64)
-            # np_conv5 = hcl_conv5_out.asnumpy()
-            # tensor_conv5_out = torch.tensor(np_conv5, dtype=torch.float64)
-            # np_avg = hcl_avg_out.asnumpy()
-            # tensor_avg_out = torch.tensor(np_avg, dtype=torch.float64)
 
             _, pred = tensor_out.topk(5, 1, largest=True, sorted=True)
             print(pred)
@@ -887,11 +757,49 @@ def save_weight(batchsize):
             jdata = json.dumps(data)
             f.write(jdata)
 
+def gen_vitis_script(args):
+    assert args.type in ["csynth","csim","cosim"]
+    name,_ = args.cpp.split('.',maxsplit=1)
+    with open(f'./c_resnet/run_{name}_{args.type}.tcl','w') as f:
+        f.write(f"open_project {args.prj}\n")
+        f.write(f"set_top {TOP_FUNC_NAME}\n")
+        f.write(f"add_files {args.cpp}\n")
+        if args.type != "csynth":
+            f.write(f"add_files -tb {name}_test.cpp\n") # requiring a testbench
+        f.write(f"open_solution \"{args.sol}\" -reset\n")
+        f.write(f"set_part {args.part}\n")
+        f.write(f"create_clock -period {args.period} -name default\n")
+        f.write("config_export -version 2.0.1;\n")
+        if args.type == "csim":
+            f.write("csim_design\n")
+        elif args.type == "csynth":
+            f.write("csynth_design\n")
+        else:
+            f.write("csim_design\n")
+            f.write("csynth_design\n")
+            f.write("cosim_design\n")
+    f.close()
+
+
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
-    arg_parser.add_argument("--cpp",help="generated cpp name",required=True)
+    arg_parser.add_argument("-prj",help="Vitis project name",required=True)
+    arg_parser.add_argument("-cpp",help="Generated cpp name",required=True)
+    arg_parser.add_argument("-type",help="[csynth,csim,cosim]",default="csynth")
+    arg_parser.add_argument("-sol",help="The solution name",required=True)
+    arg_parser.add_argument("-part",help="The part you want vitis to use. Eg. virtex7",default="virtex7")
+    arg_parser.add_argument("-period",help="The nanosecond of a clock cycle",default=13)
+
+    arg_parser.add_argument("-loop_aggr",help="Enable loop aggregation optimization",action="store_true",default=False)
+    arg_parser.add_argument("-outline",help="Enable function outline",action="store_true",default=False)
+    arg_parser.add_argument("-fifo",help="Enable fifo to pass intermediate variables",action="store_true",default=False)
+    arg_parser.add_argument("-buffer",help="Enable buffer for conv layers",action="store_true",default=False)
+    arg_parser.add_argument("-partition",help="Enable partition for arrays",action="store_true",default=False)
+    arg_parser.add_argument("-pipeline",help="Enable pipeline for convolution",action="store_true",default=False)
+
     args = arg_parser.parse_args()
     # run(2, args.cpp,'vhls')
     # save_weight(2)
     nn_run(2,args.cpp,"vhls")
+    gen_vitis_script(args)

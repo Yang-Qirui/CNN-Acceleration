@@ -98,18 +98,18 @@ def nn_basicblock(input,
     out_channels, channel, kernel_h, kernel_w = weight_conv1.shape
     conv1 = nn.conv2d_nchw(input,weight_conv1,strides=[stride,stride],name=f"{prefix}_conv1",padding=[1,1])
     batch_norm1, _, _ = nn.batch_norm(conv1,gamma_1,beta_1,mean_1,var_1,name=f"{prefix}_bn1")
-    _relu = relu(batch_norm1, name=f"{prefix}_relu")
+    _relu = relu(batch_norm1, name=f"{prefix}_relu1")
     conv2 = nn.conv2d_nchw(_relu, weight_conv2, name=f"{prefix}_conv2",padding=[1,1])
     batch_norm2, _, _ = nn.batch_norm(conv2, gamma_2, beta_2, mean_2, var_2, name=f"{prefix}_bn2")
     if stride != 1 or in_channels != expansion * out_channels:
         shortcut = nn.conv2d_nchw(input, weight_conv_shortcut,
-                          name=f"{prefix}_conv_shortcut", strides=[stride, stride], padding=[0, 0])
-        identity, _, _ = nn.batch_norm(shortcut, gamma_s,beta_s,mean_s,var_s,name=f"{prefix}_bn_shortcut")
+                          name=f"{prefix}_convs", strides=[stride, stride], padding=[0, 0])
+        identity, _, _ = nn.batch_norm(shortcut, gamma_s,beta_s,mean_s,var_s,name=f"{prefix}_bns")
     else:
         identity = input
     addition = hcl.compute(
         identity.shape, lambda *x: batch_norm2[x] + identity[x],name=f"{prefix}_add")
-    out = relu(addition, name=f"{prefix}_out")
+    out = relu(addition, name=f"{prefix}_relu2")
     return out
 
 def make_layer(input, num_blocks, stride, weights, type):
@@ -179,7 +179,7 @@ def nn_resnet18(input_image,
              ):
     ''' params: basicblock, [2, 2, 2, 2] '''
     conv1 = nn.conv2d_nchw(input_image, weight_conv1,name="conv1_x_0_conv1",padding=[1,1])
-    batch_norm1,_,_ = nn.batch_norm(conv1, conv1_gamma_1, conv1_beta_1,conv1_mean_1,conv1_var_1,name="conv1_x_0_bn1")
+    batch_norm1, _, _ = nn.batch_norm(conv1, conv1_gamma_1, conv1_beta_1,conv1_mean_1,conv1_var_1,name="conv1_x_0_bn1")
     _relu = relu(batch_norm1,name="conv1_x_0_relu")
 
     conv2_x_0 = nn_basicblock(_relu, conv2_0_conv1, conv2_0_bn_gamma_1, conv2_0_bn_beta_1,conv2_0_bn_mean_1,conv2_0_bn_var_1, conv2_0_conv2,

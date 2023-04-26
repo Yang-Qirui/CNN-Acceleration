@@ -3,3 +3,4 @@ weights/
 *.log
 dataset/
 examples/my_resnet/c_resnet
+examples/my_resnet/test.py
