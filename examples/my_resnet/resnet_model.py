@@ -1,14 +1,24 @@
 import heterocl as hcl
 import heterocl.op.nn as nn
-from resnet_functions import conv2d, batchnorm2d, relu, avgpool2d, linear
+import sys
+import os
+root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# print(root_dir)
+# util_dir = os.path.join(root_dir, "utils")
+sys.path.append(root_dir)
+from utils.functions import conv2d, batchnorm2d, relu, avgpool2d, linear
 
 ###############################################################################
 # BasicBlock for ResNet
 ###############################################################################
 
-
-def basicblock(input,
-               weight_conv1, a_batch_norm1, b_batch_norm1, weight_conv2, a_batch_norm2, b_batch_norm2, weight_conv_shortcut=None, a_batch_norm_shortcut=None, b_batch_norm_shortcut=None,
+def nn_basicblock(input,
+               weight_conv1, 
+               gamma_1,beta_1,mean_1,var_1,
+               weight_conv2,
+               gamma_2,beta_2,mean_2,var_2,
+               weight_conv_shortcut=None,
+               gamma_s=None,beta_s=None,mean_s=None,var_s=None,
                stride=1,prefix="basicblock"):
     # print(weight_conv1.shape, a_batch_norm1.shape, b_batch_norm1.shape,
     #       weight_conv2.shape, a_batch_norm2.shape, b_batch_norm2.shape)
@@ -18,24 +28,20 @@ def basicblock(input,
     expansion = 1
     batch, in_channels, in_height, in_width = input.shape
     out_channels, channel, kernel_h, kernel_w = weight_conv1.shape
-    conv1 = conv2d(input, weight_conv1, name=f"{prefix}_conv1",
-                   stride=[stride, stride])
-    batch_norm1 = batchnorm2d(
-        conv1, a_batch_norm1, b_batch_norm1, name=f"{prefix}_bn1")
-    _relu = relu(batch_norm1, name=f"{prefix}_relu")
-    conv2 = conv2d(_relu, weight_conv2, name=f"{prefix}_conv2")
-    batch_norm2 = batchnorm2d(conv2, a_batch_norm2,
-                              b_batch_norm2, name=f"{prefix}_bn2")
+    conv1 = nn.conv2d_nchw(input,weight_conv1,strides=[stride,stride],name=f"{prefix}_conv1",padding=[1,1])
+    batch_norm1, _, _ = nn.batch_norm(conv1,gamma_1,beta_1,mean_1,var_1,name=f"{prefix}_bn1")
+    _relu = relu(batch_norm1, name=f"{prefix}_relu1")
+    conv2 = nn.conv2d_nchw(_relu, weight_conv2, name=f"{prefix}_conv2",padding=[1,1])
+    batch_norm2, _, _ = nn.batch_norm(conv2, gamma_2, beta_2, mean_2, var_2, name=f"{prefix}_bn2")
     if stride != 1 or in_channels != expansion * out_channels:
-        shortcut = conv2d(input, weight_conv_shortcut,
-                          name=f"{prefix}_conv_shortcut", stride=[stride, stride], padding=[[0, 0], [0, 0]])
-        identity = batchnorm2d(shortcut, a_batch_norm_shortcut,
-                               b_batch_norm_shortcut, name=f"{prefix}_bn_shortcut")
+        shortcut = nn.conv2d_nchw(input, weight_conv_shortcut,
+                          name=f"{prefix}_convs", strides=[stride, stride], padding=[0, 0])
+        identity, _, _ = nn.batch_norm(shortcut, gamma_s,beta_s,mean_s,var_s,name=f"{prefix}_bns")
     else:
         identity = input
     addition = hcl.compute(
         identity.shape, lambda *x: batch_norm2[x] + identity[x],name=f"{prefix}_add")
-    out = relu(addition, name=f"{prefix}_out")
+    out = relu(addition, name=f"{prefix}_relu2")
     return out
 
 ###############################################################################
@@ -75,42 +81,6 @@ def bottleneck(input,
 
     return out
 
-###############################################################################
-# nn.BasicBlock for ResNet
-###############################################################################
-
-
-def nn_basicblock(input,
-               weight_conv1, 
-               gamma_1,beta_1,mean_1,var_1,
-               weight_conv2,
-               gamma_2,beta_2,mean_2,var_2,
-               weight_conv_shortcut=None,
-               gamma_s=None,beta_s=None,mean_s=None,var_s=None,
-               stride=1,prefix="basicblock"):
-    # print(weight_conv1.shape, a_batch_norm1.shape, b_batch_norm1.shape,
-    #       weight_conv2.shape, a_batch_norm2.shape, b_batch_norm2.shape)
-    # if weight_conv_shortcut != None:
-    #     print(weight_conv_shortcut.shape, a_batch_norm_shortcut.shape,
-    #           b_batch_norm_shortcut.shape)
-    expansion = 1
-    batch, in_channels, in_height, in_width = input.shape
-    out_channels, channel, kernel_h, kernel_w = weight_conv1.shape
-    conv1 = nn.conv2d_nchw(input,weight_conv1,strides=[stride,stride],name=f"{prefix}_conv1",padding=[1,1])
-    batch_norm1, _, _ = nn.batch_norm(conv1,gamma_1,beta_1,mean_1,var_1,name=f"{prefix}_bn1")
-    _relu = relu(batch_norm1, name=f"{prefix}_relu1")
-    conv2 = nn.conv2d_nchw(_relu, weight_conv2, name=f"{prefix}_conv2",padding=[1,1])
-    batch_norm2, _, _ = nn.batch_norm(conv2, gamma_2, beta_2, mean_2, var_2, name=f"{prefix}_bn2")
-    if stride != 1 or in_channels != expansion * out_channels:
-        shortcut = nn.conv2d_nchw(input, weight_conv_shortcut,
-                          name=f"{prefix}_convs", strides=[stride, stride], padding=[0, 0])
-        identity, _, _ = nn.batch_norm(shortcut, gamma_s,beta_s,mean_s,var_s,name=f"{prefix}_bns")
-    else:
-        identity = input
-    addition = hcl.compute(
-        identity.shape, lambda *x: batch_norm2[x] + identity[x],name=f"{prefix}_add")
-    out = relu(addition, name=f"{prefix}_relu2")
-    return out
 
 def make_layer(input, num_blocks, stride, weights, type):
     """make resnet layers(by layer i didnt mean this 'layer' was the
@@ -206,48 +176,4 @@ def nn_resnet18(input_image,
     avg_view = hcl.compute(
         (avg_pool.shape[0], avg_pool.shape[1]), lambda b, c: avg_pool[b, c, 0, 0],name="avg_view")
     fc = linear(avg_view, weight_fc, bias_fc,name="linear")
-    return fc
-
-def resnet18(input_image,
-             weight_conv1, a_batchnorm1, b_batchnorm1,
-             conv2_0_conv1, conv2_0_bn_w1, conv2_0_bn_b1, conv2_0_conv2, conv2_0_bn_w2, conv2_0_bn_b2,
-             conv2_1_conv1, conv2_1_bn_w1, conv2_1_bn_b1, conv2_1_conv2, conv2_1_bn_w2, conv2_1_bn_b2,
-             conv3_0_conv1, conv3_0_bn_w1, conv3_0_bn_b1, conv3_0_conv2, conv3_0_bn_w2, conv3_0_bn_b2, conv3_0_conv_s, conv3_0_bn_ws, conv3_0_bn_bs,
-             conv3_1_conv1, conv3_1_bn_w1, conv3_1_bn_b1, conv3_1_conv2, conv3_1_bn_w2, conv3_1_bn_b2,
-             conv4_0_conv1, conv4_0_bn_w1, conv4_0_bn_b1, conv4_0_conv2, conv4_0_bn_w2, conv4_0_bn_b2, conv4_0_conv_s, conv4_0_bn_ws, conv4_0_bn_bs,
-             conv4_1_conv1, conv4_1_bn_w1, conv4_1_bn_b1, conv4_1_conv2, conv4_1_bn_w2, conv4_1_bn_b2,
-             conv5_0_conv1, conv5_0_bn_w1, conv5_0_bn_b1, conv5_0_conv2, conv5_0_bn_w2, conv5_0_bn_b2, conv5_0_conv_s, conv5_0_bn_ws, conv5_0_bn_bs,
-             conv5_1_conv1, conv5_1_bn_w1, conv5_1_bn_b1, conv5_1_conv2, conv5_1_bn_w2, conv5_1_bn_b2,
-             weight_fc, bias_fc
-             ):
-    ''' params: basicblock, [2, 2, 2, 2] '''
-    conv1 = conv2d(input_image, weight_conv1)
-    batch_norm1 = batchnorm2d(conv1, a_batchnorm1, b_batchnorm1)
-    _relu = relu(batch_norm1)
-
-    conv2_x_0 = basicblock(_relu, conv2_0_conv1, conv2_0_bn_w1, conv2_0_bn_b1, conv2_0_conv2,
-                           conv2_0_bn_w2, conv2_0_bn_b2)
-    conv2_x_1 = basicblock(conv2_x_0, conv2_1_conv1, conv2_1_bn_w1, conv2_1_bn_b1, conv2_1_conv2,
-                           conv2_1_bn_w2, conv2_1_bn_b2)
-
-    conv3_x_0 = basicblock(conv2_x_1, conv3_0_conv1, conv3_0_bn_w1, conv3_0_bn_b1, conv3_0_conv2,
-                           conv3_0_bn_w2, conv3_0_bn_b2, conv3_0_conv_s, conv3_0_bn_ws, conv3_0_bn_bs, stride=2)
-    conv3_x_1 = basicblock(conv3_x_0, conv3_1_conv1, conv3_1_bn_w1, conv3_1_bn_b1, conv3_1_conv2,
-                           conv3_1_bn_w2, conv3_1_bn_b2)
-
-    conv4_x_0 = basicblock(conv3_x_1, conv4_0_conv1, conv4_0_bn_w1, conv4_0_bn_b1, conv4_0_conv2,
-                           conv4_0_bn_w2, conv4_0_bn_b2, conv4_0_conv_s, conv4_0_bn_ws, conv4_0_bn_bs, stride=2)
-    conv4_x_1 = basicblock(conv4_x_0, conv4_1_conv1, conv4_1_bn_w1, conv4_1_bn_b1, conv4_1_conv2,
-                           conv4_1_bn_w2, conv4_1_bn_b2)
-
-    conv5_x_0 = basicblock(conv4_x_1, conv5_0_conv1, conv5_0_bn_w1, conv5_0_bn_b1, conv5_0_conv2,
-                           conv5_0_bn_w2, conv5_0_bn_b2, conv5_0_conv_s, conv5_0_bn_ws, conv5_0_bn_bs, stride=2)
-    conv5_x_1 = basicblock(conv5_x_0, conv5_1_conv1, conv5_1_bn_w1, conv5_1_bn_b1, conv5_1_conv2,
-                           conv5_1_bn_w2, conv5_1_bn_b2)
-
-    avg_pool = avgpool2d(conv5_x_1)
-    avg_view = hcl.compute(
-        (avg_pool.shape[0], avg_pool.shape[1]), lambda b, c: avg_pool[b, c, 0, 0])
-    fc = linear(avg_view, weight_fc, bias_fc)
-
     return fc

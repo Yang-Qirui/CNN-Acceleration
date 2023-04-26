@@ -4,6 +4,7 @@ FIFO_DEPTH = 128
 
 # Batchnorm + relu
 def loop_aggregation(s:hcl.Schedule,func):
+    print("Starting loop_aggregate")
     bn = getattr(func,f"conv1_x_0_bn1")
     relu = getattr(func,f"conv1_x_0_relu")
     s[bn].compute_at(s[relu],axis=relu.axis[-1])
@@ -23,8 +24,9 @@ def loop_aggregation(s:hcl.Schedule,func):
             s[bn2].compute_at(s[relu2],axis=relu2.axis[-1])
             s[addition].compute_at(s[relu2],axis=relu2.axis[-1])
             aggr_ops += [bn1,bn2,addition]
-    
-    s.
+
+
+    print("Finish loop_aggregate")
 
     return [op.name for op in aggr_ops]
 
@@ -57,6 +59,7 @@ def fifo(s:hcl.Schedule,func,aggr_ops):
             # s.to(getattr(func, op.name), s[getattr(func, next_op.name)], fifo_depth=FIFO_DEPTH)
 
 def conv_buffer(s:hcl.Schedule,func):
+    print("Starting create buffers")
     conv_layers = []
 
     def create_buffer_pad(prefix,idx):
@@ -67,7 +70,7 @@ def conv_buffer(s:hcl.Schedule,func):
         s.partition(LB, dim=2)
         s.partition(WB, dim=3)
         conv_layers.append(conv.name)
-
+    print("Finish create buffers")
     
     create_buffer_pad(prefix="conv1_x_0", idx="1")
     for block in range(2, 6): # 5 layers
@@ -79,12 +82,16 @@ def conv_buffer(s:hcl.Schedule,func):
     return conv_layers
 
 def array_partition(s:hcl.Schedule, arrays):
+    print("Starting array_partition")
     for arr in arrays:
         if len(arr.shape): # An nchw array
             s.partition(arr, dim=3)
             s.partition(arr, dim=4)
+    print("Finish array_partition")
+        
 
 def pipeline(s:hcl.Schedule, func, conv_layers):
+    print("Starting pipeline")
     # stages = [(op, stage) for (op, stage) in hcl.Stage._mapping if stage.name not in aggr_ops]
     conv_stages = [(op, stage) for (op, stage) in hcl.Stage._mapping if stage.name in conv_layers]
     for op, stage in conv_stages:
@@ -93,7 +100,8 @@ def pipeline(s:hcl.Schedule, func, conv_layers):
         # print(dir(stage.axis[0]))
         ff_id = next(i for i, s in enumerate(stage.axis) if s.name.startswith('ff'))
         xx_id = next(i for i, s in enumerate(stage.axis) if s.name.startswith('xx'))
-        print(ff_id,xx_id)
         s[getattr(func, op.name)].reorder(stage.axis[ff_id], stage.axis[xx_id])
         # print(ff_id)
         # s[getattr(func, op.name)].pipeline(ff_id)
+    print("Finish pipeline")
+    
