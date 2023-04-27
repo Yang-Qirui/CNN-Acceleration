@@ -4,15 +4,12 @@ import os
 import sys
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(root_dir)
-from utils.functions import CIFAR100_TEST_MEAN, CIFAR100_TEST_STD, get_test_dataloader
+from utils.functions import CIFAR100_TEST_MEAN, CIFAR100_TEST_STD, get_test_dataloader, gen_vitis_script, gen_weights_cpp_header, save_weights_dat
 import torch
 import numpy as np
-import json
 import argparse
-import inspect
 import optimize
 
-PROJECT_NAME = "prj_mlir"
 TOP_FUNC_NAME = "top"
 
 hcl.init(hcl.Fixed(10,6))
@@ -120,7 +117,12 @@ def nn_create_resnet18(batch_size, target, args,image_size=[32, 32], resnet_scal
         nn_resnet18
     )
     
-    
+    if args.weight_h:
+        dat_dir = "../../weights/resnet18/batchsize2.pth_dat/"
+        if not os.path.exists(dat_dir):
+            save_weights_dat("../../weights/resnet18/batchsize2.pth")
+        gen_weights_cpp_header(nn_resnet18, dat_dir, "./c_resnet/weights.h")
+
     ################################################################
     # optimization
     ################################################################
@@ -307,19 +309,19 @@ def nn_load_np_params18(pt_name):
     ]
   
 
-def nn_run(batch_size, save_path,target='llvm'):
-    variables = nn_load_np_params18("../../weights/resnet18/resnet18-199-best.pth")
-    hcl_variables = []
-
-    for _, var in enumerate(variables):
-        hcl_variables.append(hcl.asarray(var.astype(np.float32)))
+def nn_run(batch_size, save_path, target='llvm'):
 
     f = nn_create_resnet18(batch_size, target, args)
     if target == 'vhls':
-        return
         with open(f"./c_resnet/{save_path}", 'w') as file:
             file.write(f)
         return
+
+    variables = nn_load_np_params18("../../weights/resnet18/resnet18-199-best.pth")
+    hcl_variables = []
+    for _, var in enumerate(variables):
+
+        hcl_variables.append(hcl.asarray(var.astype(np.float32)))
 
     cifar100_test_loader = get_test_dataloader(
         CIFAR100_TEST_MEAN, CIFAR100_TEST_STD, num_workers=2, batch_size=batch_size)
@@ -357,41 +359,6 @@ def nn_run(batch_size, save_path,target='llvm'):
     print("Top 5 err: ", 1 - correct_5 / len(cifar100_test_loader.dataset))
 
 
-def save_weight(batchsize):
-    weight_list = nn_load_np_params18(
-        "../../weights/resnet18/resnet18-50-regular.pth")
-    os.mkdir(f"../../weights/resnet18-weights-json-batchsize{batchsize}")
-    for i, weight in enumerate(weight_list):
-        data = {}
-        data[str(i)] = weight.tolist()
-        with open(f'../../weights/resnet18-weights-json-batchsize{batchsize}/layer{i}.json', 'w') as f:
-            jdata = json.dumps(data)
-            f.write(jdata)
-
-def gen_vitis_script(args):
-    assert args.type in ["csynth","csim","cosim"]
-    name,_ = args.cpp.split('.',maxsplit=1)
-    with open(f'./c_resnet/run_{name}_{args.type}.tcl','w') as f:
-        f.write(f"open_project {args.prj}\n")
-        f.write(f"set_top {TOP_FUNC_NAME}\n")
-        f.write(f"add_files {args.cpp}\n")
-        if args.type != "csynth":
-            f.write(f"add_files -tb {name}_test.cpp\n") # requiring a testbench
-        f.write(f"open_solution \"{args.sol}\" -reset\n")
-        f.write(f"set_part {args.part}\n")
-        f.write(f"create_clock -period {args.period} -name default\n")
-        f.write("config_export -version 2.0.1;\n")
-        if args.type == "csim":
-            f.write("csim_design\n")
-        elif args.type == "csynth":
-            f.write("csynth_design\n")
-        else:
-            f.write("csim_design\n")
-            f.write("csynth_design\n")
-            f.write("cosim_design\n")
-    f.close()
-
-
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
@@ -408,9 +375,12 @@ if __name__ == "__main__":
     arg_parser.add_argument("-buffer",help="Enable buffer for conv layers",action="store_true",default=False)
     arg_parser.add_argument("-partition",help="Enable partition for arrays",action="store_true",default=False)
     arg_parser.add_argument("-pipeline",help="Enable pipeline for convolution",action="store_true",default=False)
+    arg_parser.add_argument("-top",help="Top function name", default="top")
+    arg_parser.add_argument("-model",help="Model name",default="resnet")
+    arg_parser.add_argument("-weight_h",help="Enable generation of weight.h",action="store_true",default=False)
+
 
     args = arg_parser.parse_args()
-    # run(2, args.cpp,'vhls')
-    # save_weight(2)
-    nn_run(2,args.cpp,"vhls")
+    nn_run(2, args.cpp, "vhls")
     gen_vitis_script(args)
+

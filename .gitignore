@@ -2,5 +2,10 @@ dataset/cifar100-python/
 weights/
 *.log
 dataset/
-examples/my_resnet/c_resnet
-examples/my_resnet/test.py
+prj*/
+*test.py
+*.tcl
+__pycache__/
+*.pyc
+*.pyo
+*.pyd

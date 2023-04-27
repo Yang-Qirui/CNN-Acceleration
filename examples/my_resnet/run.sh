@@ -1,0 +1,1 @@
+python resnet_build.py -prj prj_mlir -cpp demo.cpp -sol full_opt -loop_aggr -buffer -partition -weight_h

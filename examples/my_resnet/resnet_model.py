@@ -3,10 +3,8 @@ import heterocl.op.nn as nn
 import sys
 import os
 root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# print(root_dir)
-# util_dir = os.path.join(root_dir, "utils")
 sys.path.append(root_dir)
-from utils.functions import conv2d, batchnorm2d, relu, avgpool2d, linear
+from utils.functions import linear, relu
 
 ###############################################################################
 # BasicBlock for ResNet
@@ -49,37 +47,37 @@ def nn_basicblock(input,
 ###############################################################################
 
 
-def bottleneck(input,
-               weights,
-               name="bottleneck", stride=1
-               ):
-    expansion = 4
-    weight_conv1, a_batch_norm1, b_batch_norm1, weight_conv2, a_batch_norm2, b_batch_norm2, weight_conv3, a_batch_norm3, b_batch_norm3, weight_conv_shortcut, a_batch_norm_shortcut, b_batch_norm_shortcut = weights
-    batch, in_channels, in_height, in_width = input.shape
-    out_channels, channel, kernel_h, kernel_w = weight_conv1.shape
-    identity = input
-    conv1 = conv2d(input, weight_conv1, name="bottleneck_conv1")
-    batch_norm1 = batchnorm2d(conv1, a_batch_norm1,
-                              b_batch_norm1, name="bottleneck_bn1")
-    _relu1 = relu(batch_norm1, name="bottleneck_relu1")
-    conv2 = conv2d(_relu1, weight_conv2, name="bottleneck_conv2",
-                   stride=[stride, stride])
-    batch_norm2 = batchnorm2d(conv2, a_batch_norm2,
-                              b_batch_norm2, name="bottleneck_bn2")
-    _relu2 = relu(batch_norm2, name="bottleneck_relu2")
-    conv3 = conv2d(_relu2, weight_conv3, name="bottleneck_conv3")
-    batch_norm3 = batchnorm2d(conv3, a_batch_norm3,
-                              b_batch_norm3, name="bottleneck_bn3")
-    if stride != 1 or in_channels != out_channels * expansion:
-        identity = conv2d(identity, weight_conv_shortcut,
-                          name="bottleneck_conv_shortcut", stride=[stride, stride])
-        identity = batchnorm2d(identity, a_batch_norm_shortcut,
-                               b_batch_norm_shortcut, name="bottleneck_bn_shortcut")
+# def bottleneck(input,
+#                weights,
+#                name="bottleneck", stride=1
+#                ):
+#     expansion = 4
+#     weight_conv1, a_batch_norm1, b_batch_norm1, weight_conv2, a_batch_norm2, b_batch_norm2, weight_conv3, a_batch_norm3, b_batch_norm3, weight_conv_shortcut, a_batch_norm_shortcut, b_batch_norm_shortcut = weights
+#     batch, in_channels, in_height, in_width = input.shape
+#     out_channels, channel, kernel_h, kernel_w = weight_conv1.shape
+#     identity = input
+#     conv1 = conv2d(input, weight_conv1, name="bottleneck_conv1")
+#     batch_norm1 = batchnorm2d(conv1, a_batch_norm1,
+#                               b_batch_norm1, name="bottleneck_bn1")
+#     _relu1 = relu(batch_norm1, name="bottleneck_relu1")
+#     conv2 = conv2d(_relu1, weight_conv2, name="bottleneck_conv2",
+#                    stride=[stride, stride])
+#     batch_norm2 = batchnorm2d(conv2, a_batch_norm2,
+#                               b_batch_norm2, name="bottleneck_bn2")
+#     _relu2 = relu(batch_norm2, name="bottleneck_relu2")
+#     conv3 = conv2d(_relu2, weight_conv3, name="bottleneck_conv3")
+#     batch_norm3 = batchnorm2d(conv3, a_batch_norm3,
+#                               b_batch_norm3, name="bottleneck_bn3")
+#     if stride != 1 or in_channels != out_channels * expansion:
+#         identity = conv2d(identity, weight_conv_shortcut,
+#                           name="bottleneck_conv_shortcut", stride=[stride, stride])
+#         identity = batchnorm2d(identity, a_batch_norm_shortcut,
+#                                b_batch_norm_shortcut, name="bottleneck_bn_shortcut")
 
-    out = batch_norm3 + identity
-    out = relu(out, name="bn_output_relu")
+#     out = batch_norm3 + identity
+#     out = relu(out, name="bn_output_relu")
 
-    return out
+#     return out
 
 
 def make_layer(input, num_blocks, stride, weights, type):
@@ -107,32 +105,10 @@ def make_layer(input, num_blocks, stride, weights, type):
         if type == 0:  # 0 is basicblock
             input = nn_basicblock(input, weights[i], stride=stride)
         elif type == 1:  # 1 is bottleneck
-            input = bottleneck(input, weights[i], stride=stride)
+            pass
+            # input = bottleneck(input, weights[i], stride=stride)
 
     return input
-
-
-def _resnet(input_image, block, num_block,
-            weight_conv1, a_batchnorm1, b_batchnorm1,
-            weights_conv2_x, weights_conv3_x, weights_conv4_x, weights_conv5_x,
-            weight_fc
-            ):
-
-    conv1 = nn.conv2d_nchw(input_image, weight_conv1,)
-    batch_norm1 = batchnorm2d(conv1, a_batchnorm1, b_batchnorm1)
-    _relu = relu(batch_norm1)
-    print("conv1_finished")
-
-    conv2_x = make_layer(_relu, num_block[0], 1, weights_conv2_x, block)
-    conv3_x = make_layer(conv2_x, num_block[1], 2, weights_conv3_x, block)
-    conv4_x = make_layer(conv3_x, num_block[2], 2, weights_conv4_x, block)
-    conv5_x = make_layer(conv4_x, num_block[3], 2, weights_conv5_x, block)
-    avg_pool = avgpool2d(conv5_x)
-    avg_view = hcl.compute(
-        (avg_pool.shape[0], avg_pool.shape[1]), lambda i, c: avg_pool[i, c, 0, 0])
-    fc = linear(avg_view, weight_fc)
-
-    return fc
 
 
 def nn_resnet18(input_image,
