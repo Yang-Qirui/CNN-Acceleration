@@ -4,7 +4,6 @@ weights/
 dataset/
 prj*/
 *test.py
-*.tcl
 __pycache__/
 *.pyc
 *.pyo
