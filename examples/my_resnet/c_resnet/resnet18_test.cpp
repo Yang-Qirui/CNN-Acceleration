@@ -108,7 +108,7 @@ string get_cwd() {
 
 string get_weight_path(int i)
 {
-    auto path = "/home1/yangqr/CNN-Acceleration/weights/resnet18-weights-json/layer" + to_string(i) + ".json";
+    auto path = "/home1/yangqr/CNN-Acceleration/weights/resnet18-weights-json-batchsize2/layer" + to_string(i) + ".json";
     return path;
 }
 
@@ -251,11 +251,11 @@ int main(int argc, char** argv)
     int acc = 0;
     for (int i = 0; i < 1; i++)
     {
-        string path = "/home1/yangqr/CNN-Acceleration/dataset/cifar-100-json/batch" + to_string(i) + ".json";
+        string path = "/home1/yangqr/CNN-Acceleration/dataset/cifar-100-json-batchsize2/batch" + to_string(i) + ".json";
         ifstream is(path);
         json data = json::parse(is);
         auto img = data[to_string(i)][0];
-        for (int b = 0; b < 32; b++)
+        for (int b = 0; b < 2; b++)
             for (int c = 0; c < 3; c++)
                 for (int h = 0; h < 32; h++)
                     for (int w = 0; w < 32; w++)

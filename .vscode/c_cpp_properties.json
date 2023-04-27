@@ -5,7 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "~/libtorch/include/**",
-                "~/torchvision/include/**"
+                "~/torchvision/include/**",
+                "/home1/yangqr/Xilinx/Vitis_HLS/2021.2/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
