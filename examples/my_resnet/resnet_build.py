@@ -116,12 +116,6 @@ def nn_create_resnet18(batch_size, target, args,image_size=[32, 32], resnet_scal
         resnet_inputs,
         nn_resnet18
     )
-    
-    if args.weight_h:
-        dat_dir = "../../weights/resnet18/batchsize2.pth_dat/"
-        if not os.path.exists(dat_dir):
-            save_weights_dat("../../weights/resnet18/batchsize2.pth")
-        gen_weights_cpp_header(nn_resnet18, dat_dir, "./c_resnet/weights.h")
 
     ################################################################
     # optimization
@@ -377,8 +371,6 @@ if __name__ == "__main__":
     arg_parser.add_argument("-pipeline",help="Enable pipeline for convolution",action="store_true",default=False)
     arg_parser.add_argument("-top",help="Top function name", default="top")
     arg_parser.add_argument("-model",help="Model name",default="resnet")
-    arg_parser.add_argument("-weight_h",help="Enable generation of weight.h",action="store_true",default=False)
-
 
     args = arg_parser.parse_args()
     nn_run(2, args.cpp, "vhls")

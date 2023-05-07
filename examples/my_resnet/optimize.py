@@ -47,7 +47,7 @@ def fifo(s:hcl.Schedule,func,aggr_ops):
     # print(conv.axis)
     # assert 0 == 1
     # s.to(func.input_image, s[func.conv1_x_0_conv1_pad], fifo_depth=FIFO_DEPTH)
-    s.to(func.conv1_x_0_conv1, s[func.conv1_x_0_relu])
+    s.to(func.conv1_x_0_conv1, s[func.conv1_x_0_relu], fifo_depth=FIFO_DEPTH)
     s.to(func.conv1_x_0_relu, s[func.conv2_x_0_conv1_pad], fifo_depth=FIFO_DEPTH)
     # s.to(func.conv2_x_0_conv1, s[func.conv2_x_0_relu1], fifo_depth=FIFO_DEPTH)
 

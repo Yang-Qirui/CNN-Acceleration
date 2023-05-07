@@ -4,7 +4,7 @@ from lenet_model import lenet
 from utils.functions import gen_vitis_script, gen_weights_cpp_header
 import optimize
 
-hcl.init(hcl.Fixed(10, 4))
+hcl.init(hcl.Float())
 
 def create_lenet(batch_size, target, args, image_size=[32,32], kernel_size=[5, 5]):
     image_h, image_w = image_size
@@ -59,7 +59,6 @@ def create_lenet(batch_size, target, args, image_size=[32,32], kernel_size=[5, 5
 def run(batch_size, args, target='llvm'):
     f = create_lenet(batch_size, target, args)
     if target == 'vhls':
-        return
         with open(f"./c_lenet/{args.cpp}", 'w') as file:
             file.write(f)
         return

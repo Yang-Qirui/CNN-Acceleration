@@ -36,7 +36,7 @@ def lenet(input_image, conv1, bias1, conv2_1, bias2_1, conv2_2, bias2_2, conv3, 
     c2_2 = conv_layer_0(output, conv2_2, bias2_2, prefix="c2_2")
     out = hcl.compute(c2_1.shape, lambda *s: c2_1[s] + c2_2[s], name="add")
     c3 = conv_layer_1(out, conv3, bias3, prefix="c3")
-    c3_view = hcl.compute((c3.shape[0],c3.shape[1]), lambda b, c: c3[b, c, 0, 0],name="c3_view")
+    c3_view = hcl.compute((c3.shape[0],c3.shape[1]), lambda b, c: c3[b, c, 0, 0], name="c3_view")
     f4 = fc_layer_0(c3_view, fc_weight1, fc_bias1, prefix="f4")
     f5 = fc_layer_1(f4, fc_weight2, fc_bias2, prefix="f5")
     return f5
